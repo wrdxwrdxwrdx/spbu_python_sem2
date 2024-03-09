@@ -82,7 +82,6 @@ class AddValue(Action):
 
 
 class PerformedCommandStorage:
-
     def __init__(self, object_list):
         self.object_list = object_list
         self.action_list = []

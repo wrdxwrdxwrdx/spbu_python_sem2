@@ -1,11 +1,12 @@
 from class_module import *
 
-COMMAND_EXPLANATION = ("\nEnter command (AddToStart, AddToEnd, ChangeIndex, AddValue) and args with space.\n"
-                       "Enter 'Undo' to cancel action.\n"
-                       "To exit enter 'q'.\n"
-                       "To see Object List enter 'List'.\n"
-                       "for example: 'ChangeIndex 2 3': "
-                       )
+COMMAND_EXPLANATION = (
+    "\nEnter command (AddToStart, AddToEnd, ChangeIndex, AddValue) and args with space.\n"
+    "Enter 'Undo' to cancel action.\n"
+    "To exit enter 'q'.\n"
+    "To see Object List enter 'List'.\n"
+    "for example: 'ChangeIndex 2 3': "
+)
 
 
 def parse_command(storage: PerformedCommandStorage, command: str) -> PerformedCommandStorage:
@@ -50,7 +51,7 @@ def main():
         storage = parse_command(storage, command)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         main()
     except Exception as error:
