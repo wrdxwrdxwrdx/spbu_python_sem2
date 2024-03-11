@@ -1,16 +1,21 @@
+from typing import Callable, Dict, Optional
+
+
 class Registry:
-    def __init__(self, default=ValueError, base_class=None):
+    def __init__(self, default: Optional[type] = None) -> None:
         self.default = default
-        self.classes = dict()
-        self.base_class = base_class
+        self.classes: Dict[str, type] = dict()
 
-    def __getitem__(self, item: type):
-        return Registry(self.default, item)
+    def __getitem__(self, item: type) -> "Registry":
+        self.base_class = item
+        return self
 
-    def register(self, name: str):
+    def register(self, name: str) -> Callable[[type], type]:
         """Decorator for adding a class with a name into the register, if it is a subclass of the base_class"""
 
-        def inner(registered_class: type):
+        def inner(registered_class: type) -> type:
+            if self.base_class is None:
+                raise ValueError("No base_class in Registry")
             if issubclass(registered_class, self.base_class):
                 self.classes[name] = registered_class
 
@@ -18,11 +23,11 @@ class Registry:
 
         return inner
 
-    def dispatch(self, name: str):
+    def dispatch(self, name: str) -> type:
         """Get class with a name from the register"""
         if name in self.classes:
             return self.classes[name]
-        elif self.default is ValueError:
+        elif self.default is None:
             raise ValueError(f"{name} was not registered")
         else:
             return self.default
