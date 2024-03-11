@@ -14,8 +14,6 @@ class Registry:
         """Decorator for adding a class with a name into the register, if it is a subclass of the base_class"""
 
         def inner(registered_class: type) -> type:
-            if self.base_class is None:
-                raise ValueError("No base_class in Registry")
             if issubclass(registered_class, self.base_class):
                 self.classes[name] = registered_class
 
