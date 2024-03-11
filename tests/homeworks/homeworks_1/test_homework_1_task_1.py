@@ -1,6 +1,6 @@
 import pytest
 
-from src.homeworks.homework_1.task_1.class_module import *
+from src.homeworks.homework_1.homework_1_task_1 import *
 
 
 class DummyClass:
