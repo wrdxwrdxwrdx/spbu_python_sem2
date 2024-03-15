@@ -1,8 +1,7 @@
 import random
 from collections.abc import MutableMapping
-from typing import Any, Generic, Iterable, Iterator, Optional, Set, Tuple, TypeVar, overload
+from typing import Generic, Iterable, Iterator, Optional, Set, Tuple, TypeVar
 
-_T = TypeVar("_T")
 Key = TypeVar("Key")
 Value = TypeVar("Value")
 
