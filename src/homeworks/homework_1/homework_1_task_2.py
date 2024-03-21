@@ -14,13 +14,16 @@ class Node(Generic[Key, Value]):
         left: Optional["Node"] = None,
         right: Optional["Node"] = None,
         /,
-        priority: float = random.random(),
+        priority: float = None,
     ):
         self.left = left
         self.right = right
-        self.priority = priority
         self.key = key
         self.value = value
+        if priority:
+            self.priority = priority
+        else:
+            self.priority = random.random()
 
     def __str__(self) -> str:
         if self:
@@ -66,25 +69,14 @@ class Treap(MutableMapping):
             root.left = right_treap
             return left_treap, root
 
-    def __delitem__(self, key: Key) -> None:
+    def __delitem__(self, key: int) -> None:
         left_treap, right_treap = self.split_node(self.root, key)
-        checking_treap = right_treap
-
-        if checking_treap and checking_treap.key == key:
-            self.root = left_treap
-            self.size -= 1
-            del checking_treap
-        else:
-            while checking_treap is not None and checking_treap.left is not None:
-                if checking_treap.left.key == key:
-                    del checking_treap.left
-                    checking_treap.left = None
-                    self.size -= 1
-                    break
-                checking_treap = checking_treap.left
-            else:
-                raise KeyError(f"No Key({key}) in Treap")
-            self.root = self.merge_node(left_treap, right_treap)
+        delete_node, right_treap = self.split_node(right_treap, key + 1)
+        if delete_node is None:
+            raise KeyError(f"No Key({key}) in Treap")
+        del delete_node
+        self.root = self.merge_node(left_treap, right_treap)
+        self.size -= 1
 
     def __getitem__(self, key: Key) -> Optional[Value]:
         def getitem(root: Optional[Node], key: Key) -> Optional[Value]:
@@ -155,22 +147,3 @@ class Treap(MutableMapping):
             return f"[<{root.key}, {root.value}, {root.priority}>, left={root.left.__repr__()}, right={root.right.__repr__()}]"
         else:
             return "None"
-
-    def __eq__(self, other: object) -> bool:
-        def eq(first_node: Optional[Node], second_node: Optional[Node]) -> bool:
-            if first_node is None and second_node is None:
-                return True
-            elif (first_node is None) != (second_node is None):
-                return False
-            elif first_node is not None and second_node is not None:
-                return (
-                    first_node.key == second_node.key
-                    and first_node.value == second_node.value
-                    and eq(first_node.left, second_node.left)
-                    and eq(first_node.right, second_node.right)
-                )
-            return False
-
-        if not isinstance(other, Treap):
-            raise NotImplementedError
-        return eq(self.root, other.root)
