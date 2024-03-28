@@ -64,8 +64,7 @@ class TestRegistry:
     def test_default_dispatch(self, name, default):
         assert self.registry.dispatch(name) == default
 
-    @pytest.mark.parametrize("name", ["NotInRegistry", "defaultdict", "OrderedDict", "Counter"])
-    def test_dispatch_exception(self, name):
+    def test_dispatch_exception(self):
         with pytest.raises(ValueError):
             self.registry_no_default.dispatch("NotInRegistry")
 

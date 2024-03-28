@@ -1,7 +1,7 @@
 from collections import Counter, OrderedDict, defaultdict
 from typing import Callable, Dict, Generic, Optional, Type, TypeVar
 
-ParentClass = TypeVar("ParentClass")
+T = TypeVar("T")
 
 USER_TEXT = (
     "Registry with ParentClass 'dict', default=dict and Elements:\n"
@@ -12,15 +12,15 @@ USER_TEXT = (
 )
 
 
-class Registry(Generic[ParentClass]):
-    def __init__(self, default: Optional[type] = None) -> None:
+class Registry(Generic[T]):
+    def __init__(self, default: Optional[Type[T]] = None) -> None:
         self.default = default
-        self.classes: Dict[str, Type[ParentClass]] = dict()
+        self.classes: Dict[str, Type[T]] = dict()
 
-    def register(self, name: str) -> Callable[[Type[ParentClass]], Type[ParentClass]]:
+    def register(self, name: str) -> Callable[[Type[T]], Type[T]]:
         """Decorator for adding a class with a name into the register"""
 
-        def inner(registered_class: Type[ParentClass]) -> Type[ParentClass]:
+        def inner(registered_class: Type[T]) -> Type[T]:
             self.classes[name] = registered_class
             return registered_class
 
@@ -28,7 +28,7 @@ class Registry(Generic[ParentClass]):
             raise ValueError(f"{name} already in registry")
         return inner
 
-    def dispatch(self, name: str) -> Type[ParentClass] | type:
+    def dispatch(self, name: str) -> Type[T] | T:
         """Get class with a name from the register"""
         if name in self.classes:
             return self.classes[name]
