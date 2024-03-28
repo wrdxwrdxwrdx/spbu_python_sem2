@@ -5,7 +5,7 @@ from src.homeworks.homework_1.homework_1_task_2 import *
 
 class TestTreap:
     @staticmethod
-    def create_random_items(size) -> tuple[tuple[Key, Value]]:
+    def create_random_items(size) -> tuple[tuple[K, V]]:
         keys = list(range(size))
         values = list(range(size))
         random.shuffle(values)
@@ -14,7 +14,7 @@ class TestTreap:
         return tuple(items)
 
     @staticmethod
-    def create_treap(items: Tuple[Tuple[Key, Value], ...]) -> Treap:
+    def create_treap(items: Tuple[Tuple[K, V], ...]) -> Treap:
         treap = Treap()
         for key, value in items:
             treap[key] = value

@@ -2,19 +2,19 @@ import random
 from collections.abc import MutableMapping
 from typing import Generic, Iterable, Iterator, Optional, Set, Tuple, TypeVar
 
-Key = TypeVar("Key")
-Value = TypeVar("Value")
+K = TypeVar("K")
+V = TypeVar("V")
 
 
-class Node(Generic[Key, Value]):
+class Node(Generic[K, V]):
     def __init__(
-        self,
-        key: Key,
-        value: Value,
-        left: Optional["Node"] = None,
-        right: Optional["Node"] = None,
-        /,
-        priority: float = None,
+            self,
+            key: K,
+            value: V,
+            left: Optional["Node"] = None,
+            right: Optional["Node"] = None,
+            /,
+            priority: float = None,
     ):
         self.left = left
         self.right = right
@@ -57,7 +57,7 @@ class Treap(MutableMapping):
             return right_node
 
     @staticmethod
-    def split_node(root: Optional[Node], key: Key) -> Tuple[Optional[Node], Optional[Node]]:
+    def split_node(root: Optional[Node], key: K) -> Tuple[Optional[Node], Optional[Node]]:
         if root is None:
             return None, None
         if key > root.key:
@@ -69,17 +69,23 @@ class Treap(MutableMapping):
             root.left = right_treap
             return left_treap, root
 
-    def __delitem__(self, key: int) -> None:
-        left_treap, right_treap = self.split_node(self.root, key)
-        delete_node, right_treap = self.split_node(right_treap, key + 1)
-        if delete_node is None:
-            raise KeyError(f"No Key({key}) in Treap")
-        del delete_node
-        self.root = self.merge_node(left_treap, right_treap)
+    def __delitem__(self, key: K) -> None:
+        def delete(root: Optional[Node], key: K) -> Optional[Node]:
+            if root is None:
+                raise KeyError(f"No K({key}) in Treap")
+            if key < root.key:
+                root.left = delete(root.left, key)
+            elif key > root.key:
+                root.right = delete(root.right, key)
+            else:
+                return self.merge_node(root.left, root.right)
+            return root
+
+        self.root = delete(self.root, key)
         self.size -= 1
 
-    def __getitem__(self, key: Key) -> Optional[Value]:
-        def getitem(root: Optional[Node], key: Key) -> Optional[Value]:
+    def __getitem__(self, key: K) -> Optional[V]:
+        def getitem(root: Optional[Node], key: K) -> Optional[V]:
             if root is not None:
                 if root.key < key:
                     return getitem(root.right, key)
@@ -87,12 +93,12 @@ class Treap(MutableMapping):
                     return getitem(root.left, key)
                 else:
                     return root.value
-            raise KeyError(f"No Key({key}) in Treap")
+            raise KeyError(f"No K({key}) in Treap")
 
         return getitem(self.root, key)
 
-    def __iter__(self) -> Iterator[Key]:
-        def iterate(root: Optional[Node], output: Set[Key]) -> Set[Key]:
+    def __iter__(self) -> Iterator[K]:
+        def iterate(root: Optional[Node], output: Set[K]) -> Set[K]:
             if root is not None:
                 output.add(root.key)
                 output = iterate(root.left, output)
@@ -104,9 +110,9 @@ class Treap(MutableMapping):
     def __len__(self) -> int:
         return self.size
 
-    def __setitem__(self, key: Key, value: Value) -> None:
-        def update(__m: Iterable[Tuple[Key, Value]]) -> None:
-            def _update(root: Optional[Node], key: Key, value: Value) -> Optional[Node]:
+    def __setitem__(self, key: K, value: V) -> None:
+        def update(__m: Iterable[Tuple[K, V]]) -> None:
+            def _update(root: Optional[Node], key: K, value: V) -> Optional[Node]:
                 if root is None:
                     return root
                 if key == root.key:
