@@ -8,13 +8,13 @@ V = TypeVar("V")
 
 class Node(Generic[K, V]):
     def __init__(
-            self,
-            key: K,
-            value: V,
-            left: Optional["Node"] = None,
-            right: Optional["Node"] = None,
-            /,
-            priority: float = None,
+        self,
+        key: K,
+        value: V,
+        left: Optional["Node"] = None,
+        right: Optional["Node"] = None,
+        /,
+        priority: float = None,
     ):
         self.left = left
         self.right = right
