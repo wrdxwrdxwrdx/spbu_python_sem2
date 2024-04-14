@@ -28,7 +28,7 @@ class Registry(Generic[T]):
             raise ValueError(f"{name} already in registry")
         return inner
 
-    def dispatch(self, name: str) -> Type[T] | T:
+    def dispatch(self, name: str) -> Type[T]:
         """Get class with a name from the register"""
         if name in self.classes:
             return self.classes[name]
