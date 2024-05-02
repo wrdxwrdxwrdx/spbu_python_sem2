@@ -41,7 +41,7 @@ class TestModel:
         ),
     )
     def test_best(self, quote_nuber, expected):
-        with open("best.html", "r") as file:
+        with open("tests/exam/exam_2/best.html", "r") as file:
             assert parse("".join(file.readlines()), quote_nuber) == expected
 
     @pytest.mark.parametrize(
@@ -81,7 +81,7 @@ class TestModel:
         ),
     )
     def test_last(self, quote_nuber, expected):
-        with open("last.html", "r") as file:
+        with open("tests/exam/exam_2/last.html", "r") as file:
             assert parse("".join(file.readlines()), quote_nuber, no_first=True) == expected
 
     @pytest.mark.parametrize(
@@ -121,5 +121,5 @@ class TestModel:
         ),
     )
     def test_random(self, quote_nuber, expected):
-        with open("random.html", "r") as file:
+        with open("tests/exam/exam_2/random.html", "r") as file:
             assert parse("".join(file.readlines()), quote_nuber) == expected
