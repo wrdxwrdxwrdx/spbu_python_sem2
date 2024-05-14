@@ -22,6 +22,7 @@ def check_time_ms(
 def create_graph(size: int, threads: list[int], output_path: str, multiprocess: bool = False) -> None:
     thread_y = [check_time_ms(thread_sort, size, thread_number, multiprocess=multiprocess) for thread_number in threads]
 
+    plt.title(f"size: {size}")
     plt.plot(threads, thread_y, label="multiprocess sort" if multiprocess else "thread sort")
     merge_y = [check_time_ms(merge_sort, size) for _ in threads]
     plt.plot(threads, merge_y, label="merge sort")
