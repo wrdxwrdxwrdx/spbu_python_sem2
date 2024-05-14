@@ -11,7 +11,7 @@ def check_time_ms(
     sorting_function: Callable[[list[int], int], list[int]] | Callable[[list[int]], list[int]],
     size: int,
     *args: int,
-    **kwargs: bool
+    **kwargs: bool,
 ) -> float:
     array = [random.randint(-100, 100) for _ in range(size)]
     start = time.perf_counter()
