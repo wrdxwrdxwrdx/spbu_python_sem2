@@ -3,9 +3,7 @@ from argparse import ArgumentParser
 from asyncio import StreamReader, StreamWriter
 from typing import Optional
 
-import loguru
-
-logger = loguru.logger
+from loguru import logger
 
 
 class Chat:
@@ -15,10 +13,12 @@ class Chat:
         self.users: dict[str, tuple[StreamReader, StreamWriter]] = {}
 
     async def send_to_everyone(self, message: str, dodge_name: Optional[str] = None) -> None:
+        tasks = []
         for username, (reader, writer) in self.users.items():
             if username != dodge_name:
                 writer.write(message.encode())
-                await writer.drain()
+                tasks.append(writer.drain())
+        await asyncio.gather(*tasks)
 
     async def get_name(self, reader: StreamReader, writer: StreamWriter) -> str:
         writer.write("Welcome to Chat, please enter your USERNAME:\n".encode())
@@ -52,9 +52,6 @@ class Chat:
                 break
             else:
                 message = message_byte.decode()
-                if message.strip() == "QUIT":
-                    await self.disconnect_user(username)
-                    break
                 await self.send_to_everyone(f"{username}: {message}", dodge_name=username)
 
     async def main(self) -> None:

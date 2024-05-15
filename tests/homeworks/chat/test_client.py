@@ -31,19 +31,6 @@ class TestClientSend:
             send_task.cancel()
             server.close()
 
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("message", ("QUIT\n",))
-    @patch("sys.stdin.readline")
-    async def test_send_message_quit(self, mock_stdin, message):
-        mock_stdin.return_value = message
-        server = await asyncio.start_server(self.echo_handler, self.ip, self.port)
-        async with server:
-            reader, writer = await asyncio.open_connection(self.ip, self.port)
-            send_task = asyncio.create_task(Client.send_message(writer))
-            await asyncio.sleep(0.1)
-            assert send_task.done()
-            server.close()
-
 
 class TestClientGet:
     ip, port = "127.0.0.1", 8888

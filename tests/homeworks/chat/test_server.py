@@ -68,27 +68,6 @@ class TestChat:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("username", ("Artem\n", "Roma\n", "SomeText\n", "\n"))
-    async def test_quit_disconnect(self, username):
-        chat = Chat(self.ip, self.port)
-        chat_task = asyncio.create_task(chat.main())
-        await asyncio.sleep(0.1)
-        reader, writer = await asyncio.open_connection(self.ip, self.port)
-        reader_task = asyncio.create_task(self.read_from_reader(reader))
-        await asyncio.sleep(0.1)
-
-        writer.write(username.encode())
-        await writer.drain()
-        await asyncio.sleep(0.1)
-        assert username.strip() in chat.users
-        writer.write("QUIT\n".encode())
-        await writer.drain()
-        await asyncio.sleep(0.1)
-        assert username.strip() not in chat.users
-        reader_task.cancel()
-        chat_task.cancel()
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("username", ("Artem\n", "Roma\n", "SomeText\n", "\n"))
     async def test_empty_byte_disconnect(self, username):
         chat = Chat(self.ip, self.port)
         chat_task = asyncio.create_task(chat.main())
@@ -202,8 +181,8 @@ class TestChat:
                 await asyncio.sleep(0.1)
 
         for _, writer in users_info.values():
-            writer.write("QUIT\n".encode())
-            await writer.drain()
+            writer.close()
+            await writer.wait_closed()
             await asyncio.sleep(0.1)
 
         for index, username in enumerate(users):

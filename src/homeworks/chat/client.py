@@ -3,6 +3,8 @@ import sys
 from argparse import ArgumentParser
 from asyncio import StreamReader, StreamWriter
 
+from loguru import logger
+
 
 class Client:
     def __init__(self, ip: str, port: int) -> None:
@@ -14,16 +16,14 @@ class Client:
         while True:
             message = await reader.readline()
             if message == b"":
-                print("Server crashed :( ")
+                logger.info("Server crashed :( ")
                 break
             print(message.decode().strip())
 
     @staticmethod
     async def send_message(writer: StreamWriter) -> None:
         while True:
-            message = await asyncio.to_thread(sys.stdin.readline)
-            if message.strip() == "QUIT":
-                break
+            message = await asyncio.get_running_loop().run_in_executor(None, sys.stdin.readline)
             writer.write(message.encode())
             await writer.drain()
 
@@ -34,13 +34,11 @@ class Client:
     async def main(self) -> None:
         reader, writer = await self.connect()
         read_task = asyncio.create_task(self.get_message(reader))
+        logger.info("IM STARTING CLOSING")
         try:
             await self.send_message(writer)
         except ConnectionError as err:
             print(err)
-        read_task.cancel()
-        writer.close()
-        await writer.wait_closed()
 
 
 if __name__ == "__main__":
