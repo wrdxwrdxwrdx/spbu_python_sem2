@@ -1,13 +1,13 @@
-from tkinter import ttk
+from tkinter import Tk, ttk
 
 
 class ModeChoiceView(ttk.Frame):
-    GREETINGS = 'Hello! Chose TicTacToe game mod'
+    GREETINGS = "Hello! Chose TicTacToe game mod"
     SINGLE_LABEL = "SINGLE"
     BOT_LABEL = "BOT"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        super().__init__()
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
@@ -23,10 +23,10 @@ class ModeChoiceView(ttk.Frame):
 
 
 class SideChoiceView(ttk.Frame):
-    GREETINGS = 'Choose your side'
+    GREETINGS = "Choose your side"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        super().__init__()
         #
         self.grid_columnconfigure(0, weight=2)
         self.grid_columnconfigure(1, weight=2)
@@ -44,9 +44,8 @@ class SideChoiceView(ttk.Frame):
 
 
 class GameView(ttk.Frame):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        super().__init__()
         self.buttons: list[ttk.Button] = []
         for x in range(1, 4):
             for y in range(1, 4):
@@ -58,10 +57,10 @@ class GameView(ttk.Frame):
 
 
 class CongratulationsView(ttk.Frame):
-    CONGRATULATIONS = 'SOMEBODY WON!!!'
+    CONGRATULATIONS = "SOMEBODY WON!!!"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        super().__init__()
         self.menu_btn = ttk.Button(self, text="MENU")
         self.congratulations_label = ttk.Label(self, text=self.CONGRATULATIONS, anchor="center")
         self.grid_columnconfigure(index=0, weight=1)
@@ -72,12 +71,12 @@ class CongratulationsView(ttk.Frame):
 
 
 class StrategyChoiceView(ttk.Frame):
-    GREETINGS = 'Chose Bot strategy'
+    GREETINGS = "Choose Bot strategy"
     RANDOM_LABEL = "RANDOM"
     SMART_LABEL = "SMART"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        super().__init__()
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)

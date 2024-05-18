@@ -1,10 +1,10 @@
 import abc
-from tkinter import Tk, ttk
-from typing import Optional
-
-from model import SingleModel, BotModel, TicTacToeModel
-from view import ModeChoiceView, SideChoiceView, GameView, CongratulationsView, StrategyChoiceView
 from functools import partial
+from tkinter import Tk, ttk
+from typing import Callable, Optional
+
+from model import BotModel, SingleModel, TicTacToeModel
+from view import CongratulationsView, GameView, ModeChoiceView, SideChoiceView, StrategyChoiceView
 
 
 class IViewModel(metaclass=abc.ABCMeta):
@@ -17,8 +17,8 @@ class IViewModel(metaclass=abc.ABCMeta):
 
 
 class ViewModel:
-    def __init__(self, root: Tk):
-        self._model = None
+    def __init__(self, root: Tk) -> None:
+        self._model: Optional[TicTacToeModel] = None
         self._root = root
 
         self._viewmodels: dict[str, IViewModel] = {
@@ -32,7 +32,7 @@ class ViewModel:
         self._model = model
         self._viewmodels = viewmodels
 
-    def switch(self, name: str, data: dict):
+    def switch(self, name: str, data: dict) -> None:
         if name not in self._viewmodels:
             raise RuntimeError(f"Unknown view to switch: {name}")
         if self._current_view is not None:
@@ -40,15 +40,15 @@ class ViewModel:
         self._current_view = self._viewmodels[name].start(self._root, data)
         self._current_view.grid(row=0, column=0, sticky="NSEW")
 
-    def start(self):
+    def start(self) -> None:
         self.switch("ModeChoice", {"ViewModel": self})
 
 
 class GameViewModel(IViewModel):
     _model: SingleModel
 
-    def _bind(self, view: GameView, view_model: ViewModel):
-        def create_callback_func(coord: int):
+    def _bind(self, view: GameView, view_model: ViewModel) -> None:
+        def create_callback_func(coord: int) -> Callable:
             return lambda value: view.buttons[coord].config(text=value)
 
         for coord in range(len(view.buttons)):
@@ -60,7 +60,8 @@ class GameViewModel(IViewModel):
 
         if len(self._model.winner.callbacks) == 0:
             self._model.winner.add_callback(
-                lambda winner: view_model.switch("Congratulations", {"winner": winner, "ViewModel": view_model}))
+                lambda winner: view_model.switch("Congratulations", {"winner": winner, "ViewModel": view_model})
+            )
 
     def start(self, root: Tk, data: dict) -> ttk.Frame:
         if "ViewModel" not in data:
@@ -71,14 +72,18 @@ class GameViewModel(IViewModel):
 
 
 class CongratulationsViewModel(IViewModel):
-    def _bind(self, view: CongratulationsView, view_model: ViewModel, winner: str):
-        def menu_btn_func():
-            self._model.winner.value = None
+    def _bind(self, view: CongratulationsView, view_model: ViewModel, winner: str) -> None:
+        def menu_btn_func() -> None:
+            if self._model:
+                self._model.winner.value = None
 
-            view_model.set_model(None, {
-                "ModeChoice": ModeChoiceViewModel(None),
-                "StrategyChoice": StrategyChoiceViewModel(None),
-            })
+            view_model.set_model(
+                None,
+                {
+                    "ModeChoice": ModeChoiceViewModel(None),
+                    "StrategyChoice": StrategyChoiceViewModel(None),
+                },
+            )
             view_model.switch("ModeChoice", {"ViewModel": view_model})
 
         if winner != "DRAW":
@@ -108,10 +113,15 @@ class StrategyChoiceViewModel(IViewModel):
                 "StrategyChoice": StrategyChoiceViewModel(model),
                 "SideChoice": SideChoiceViewModel(model),
                 "Game": GameViewModel(model),
-                "Congratulations": CongratulationsViewModel(model)
+                "Congratulations": CongratulationsViewModel(model),
             }
             view_model.set_model(model, viewmodels)
-            view_model.switch("SideChoice", {"callback": callback, })
+            view_model.switch(
+                "SideChoice",
+                {
+                    "callback": callback,
+                },
+            )
 
         def smart_btn_cmd() -> None:
             model = BotModel(is_strategy=True)
@@ -121,10 +131,15 @@ class StrategyChoiceViewModel(IViewModel):
                 "StrategyChoice": StrategyChoiceViewModel(model),
                 "SideChoice": SideChoiceViewModel(model),
                 "Game": GameViewModel(model),
-                "Congratulations": CongratulationsViewModel(model)
+                "Congratulations": CongratulationsViewModel(model),
             }
             view_model.set_model(model, viewmodels)
-            view_model.switch("SideChoice", {"callback": callback, })
+            view_model.switch(
+                "SideChoice",
+                {
+                    "callback": callback,
+                },
+            )
 
         view.random_btn.config(command=random_btn_cmd)
         view.smart_btn.config(command=smart_btn_cmd)
@@ -146,8 +161,7 @@ class ModeChoiceViewModel(IViewModel):
                 "ModeChoice": self,
                 "SideChoice": SideChoiceViewModel(model),
                 "Game": GameViewModel(model),
-                "Congratulations": CongratulationsViewModel(model)
-
+                "Congratulations": CongratulationsViewModel(model),
             }
             view_model.set_model(model, viewmodels)
             view_model.switch("SideChoice", {"callback": callback})
@@ -167,13 +181,15 @@ class ModeChoiceViewModel(IViewModel):
 
 
 class SideChoiceViewModel(IViewModel):
-    def _bind(self, view: SideChoiceView, callback) -> None:
-        def x_btn_cmd():
-            self._model.set_player("X")
+    def _bind(self, view: SideChoiceView, callback: Callable) -> None:
+        def x_btn_cmd() -> None:
+            if self._model:
+                self._model.set_player("X")
             callback()
 
-        def o_btn_cmd():
-            self._model.set_player("O")
+        def o_btn_cmd() -> None:
+            if self._model:
+                self._model.set_player("O")
             callback()
 
         view.x_btn.config(command=x_btn_cmd)

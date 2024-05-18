@@ -1,16 +1,17 @@
 import abc
 import random
-import time
 from copy import copy
-from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Optional
 
-from observer import Observable
+from src.homeworks.homework_5.app.observer import Observable
 
 
 class TicTacToeModel(metaclass=abc.ABCMeta):
-    current_player: Observable = Observable()
-    winner: Observable = Observable()
+    current_player: Observable = Observable[str]()
+    winner: Observable = Observable[str]()
+
+    def __init__(self) -> None:
+        self.table: list[Observable[str]] = [Observable[str]() for _ in range(9)]
 
     @abc.abstractmethod
     def _validate_move(self, coord: int) -> bool:
@@ -27,10 +28,6 @@ class TicTacToeModel(metaclass=abc.ABCMeta):
 
 
 class SingleModel(TicTacToeModel):
-    def __init__(self) -> None:
-        self.table = [Observable() for _ in range(9)]
-        self.session = Observable()
-
     def _validate_move(self, coord: int) -> bool:
         return self.table[coord].value is None
 
@@ -67,9 +64,8 @@ class SingleModel(TicTacToeModel):
 
 class BotModel(TicTacToeModel):
     def __init__(self, is_strategy: bool = False) -> None:
+        super().__init__()
         self.is_strategy = is_strategy
-        self.table = [Observable() for _ in range(9)]
-        self.session = Observable()
 
     def _validate_move(self, coord: int) -> bool:
         return self.table[coord].value is None
@@ -106,8 +102,8 @@ class BotModel(TicTacToeModel):
             if self.winner.value is None:
                 self.make_move_bot()
 
-    def _generate_bot_move(self, table: list[str]) -> int:
-        def _check_win_table(table: list[str]) -> bool:
+    def _generate_bot_move(self, table: list[Optional[str]]) -> int:
+        def _check_win_table(table: list[Optional[str]]) -> bool:
             # row
             for row in range(3):
                 if table[row * 3] == table[row * 3 + 1] == table[row * 3 + 2] is not None:
@@ -128,6 +124,7 @@ class BotModel(TicTacToeModel):
         def _generate_random_move() -> int:
             coord = random.randint(0, 8)
             while not self._validate_move(coord):
+                print(coord)
                 coord = random.randint(0, 8)
             return coord
 
