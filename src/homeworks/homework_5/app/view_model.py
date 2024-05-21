@@ -1,4 +1,5 @@
 import abc
+import asyncio
 from functools import partial
 from tkinter import Tk, ttk
 from typing import Callable, Optional
@@ -44,62 +45,31 @@ class ViewModel:
         self.switch("ModeChoice", {"ViewModel": self})
 
 
-class GameViewModel(IViewModel):
-    _model: SingleModel
+class ModeChoiceViewModel(IViewModel):
+    def _bind(self, view: ModeChoiceView, view_model: ViewModel) -> None:
+        def single_btn_cmd() -> None:
+            model = SingleModel()
+            callback = model.current_player.add_callback(lambda _: view_model.switch("Game", {"ViewModel": view_model}))
+            viewmodels = {
+                "ModeChoice": self,
+                "SideChoice": SideChoiceViewModel(model),
+                "Game": GameViewModel(model),
+                "Congratulations": CongratulationsViewModel(model),
+            }
+            view_model.set_model(model, viewmodels)
+            view_model.switch("SideChoice", {"callback": callback})
 
-    def _bind(self, view: GameView, view_model: ViewModel) -> None:
-        def create_callback_func(coord: int) -> Callable:
-            return lambda value: view.buttons[coord].config(text=value)
+        def bot_btn_cmd() -> None:
+            view_model.switch("StrategyChoice", {"ViewModel": view_model})
 
-        for coord in range(len(view.buttons)):
-            f = create_callback_func(coord)
-            self._model.table[coord].add_callback(f)
-            func = partial(self._model.make_move, coord)
-            btn = view.buttons[coord]
-            btn.config(command=func)
-
-        if len(self._model.winner.callbacks) == 0:
-            self._model.winner.add_callback(
-                lambda winner: view_model.switch("Congratulations", {"winner": winner, "ViewModel": view_model})
-            )
+        view.single_btn.config(command=single_btn_cmd)
+        view.bot_btn.config(command=bot_btn_cmd)
 
     def start(self, root: Tk, data: dict) -> ttk.Frame:
         if "ViewModel" not in data:
-            raise KeyError("No ViewModel in data")
-        frame = GameView()
+            raise RuntimeError("ViewModel must be in data")
+        frame = ModeChoiceView()
         self._bind(frame, data["ViewModel"])
-        return frame
-
-
-class CongratulationsViewModel(IViewModel):
-    def _bind(self, view: CongratulationsView, view_model: ViewModel, winner: str) -> None:
-        def menu_btn_func() -> None:
-            if self._model:
-                self._model.winner.value = None
-
-            view_model.set_model(
-                None,
-                {
-                    "ModeChoice": ModeChoiceViewModel(None),
-                    "StrategyChoice": StrategyChoiceViewModel(None),
-                },
-            )
-            view_model.switch("ModeChoice", {"ViewModel": view_model})
-
-        if winner != "DRAW":
-            view.congratulations_label.config(text=f"{winner} WON!!!")
-        else:
-            view.congratulations_label.config(text="DRAW!!!")
-
-        view.menu_btn.config(command=menu_btn_func)
-
-    def start(self, root: Tk, data: dict) -> ttk.Frame:
-        if "winner" not in data:
-            raise KeyError("No winner in data")
-        if "ViewModel" not in data:
-            raise KeyError("No ViewModel in data")
-        frame = CongratulationsView()
-        self._bind(frame, data["ViewModel"], data["winner"])
         return frame
 
 
@@ -152,50 +122,80 @@ class StrategyChoiceViewModel(IViewModel):
         return frame
 
 
-class ModeChoiceViewModel(IViewModel):
-    def _bind(self, view: ModeChoiceView, view_model: ViewModel) -> None:
-        def single_btn_cmd() -> None:
-            model = SingleModel()
-            callback = model.current_player.add_callback(lambda _: view_model.switch("Game", {"ViewModel": view_model}))
-            viewmodels = {
-                "ModeChoice": self,
-                "SideChoice": SideChoiceViewModel(model),
-                "Game": GameViewModel(model),
-                "Congratulations": CongratulationsViewModel(model),
-            }
-            view_model.set_model(model, viewmodels)
-            view_model.switch("SideChoice", {"callback": callback})
-
-        def bot_btn_cmd() -> None:
-            view_model.switch("StrategyChoice", {"ViewModel": view_model})
-
-        view.single_btn.config(command=single_btn_cmd)
-        view.bot_btn.config(command=bot_btn_cmd)
-
-    def start(self, root: Tk, data: dict) -> ttk.Frame:
-        if "ViewModel" not in data:
-            raise RuntimeError("ViewModel must be in data")
-        frame = ModeChoiceView()
-        self._bind(frame, data["ViewModel"])
-        return frame
-
-
 class SideChoiceViewModel(IViewModel):
     def _bind(self, view: SideChoiceView, callback: Callable) -> None:
-        def x_btn_cmd() -> None:
+        async def x_btn_cmd() -> None:
             if self._model:
-                self._model.set_player("X")
+                await self._model.set_player("X")
             callback()
 
-        def o_btn_cmd() -> None:
+        async def o_btn_cmd() -> None:
             if self._model:
-                self._model.set_player("O")
+                await self._model.set_player("O")
             callback()
 
-        view.x_btn.config(command=x_btn_cmd)
-        view.o_btn.config(command=o_btn_cmd)
+        view.x_btn.config(command=lambda: asyncio.run(x_btn_cmd()))
+        view.o_btn.config(command=lambda: asyncio.run(o_btn_cmd()))
 
     def start(self, root: Tk, data: dict) -> ttk.Frame:
         frame = SideChoiceView()
         self._bind(frame, data["callback"])
+        return frame
+
+
+class GameViewModel(IViewModel):
+    _model: SingleModel
+
+    def _bind(self, view: GameView, view_model: ViewModel) -> None:
+        def create_callback_func(coord: int) -> Callable:
+            return lambda value: view.buttons[coord].config(text=value)
+
+        for coord in range(len(view.buttons)):
+            self._model.table[coord].add_callback(create_callback_func(coord))
+            func = partial(lambda coord: asyncio.run(self._model.make_move(coord)), coord)
+            btn = view.buttons[coord]
+            btn.config(command=func)
+
+        if len(self._model.winner.callbacks) == 0:
+            self._model.winner.add_callback(
+                lambda winner: view_model.switch("Congratulations", {"winner": winner, "ViewModel": view_model})
+            )
+
+    def start(self, root: Tk, data: dict) -> ttk.Frame:
+        if "ViewModel" not in data:
+            raise KeyError("No ViewModel in data")
+        frame = GameView()
+        self._bind(frame, data["ViewModel"])
+        return frame
+
+
+class CongratulationsViewModel(IViewModel):
+    def _bind(self, view: CongratulationsView, view_model: ViewModel, winner: str) -> None:
+        def menu_btn_func() -> None:
+            if self._model:
+                self._model.winner.value = None
+
+            view_model.set_model(
+                None,
+                {
+                    "ModeChoice": ModeChoiceViewModel(None),
+                    "StrategyChoice": StrategyChoiceViewModel(None),
+                },
+            )
+            view_model.switch("ModeChoice", {"ViewModel": view_model})
+
+        if winner != "DRAW":
+            view.congratulations_label.config(text=f"{winner} WON!!!")
+        else:
+            view.congratulations_label.config(text="DRAW!!!")
+
+        view.menu_btn.config(command=menu_btn_func)
+
+    def start(self, root: Tk, data: dict) -> ttk.Frame:
+        if "winner" not in data:
+            raise KeyError("No winner in data")
+        if "ViewModel" not in data:
+            raise KeyError("No ViewModel in data")
+        frame = CongratulationsView()
+        self._bind(frame, data["ViewModel"], data["winner"])
         return frame

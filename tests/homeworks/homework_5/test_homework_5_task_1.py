@@ -39,6 +39,7 @@ class TestSingleModel:
         self._set_table(model, table)
         assert model._validate_move(coord) == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,expected",
         (
@@ -54,11 +55,12 @@ class TestSingleModel:
             (["", "", "O", "", "O", "", "O", "", ""], True),
         ),
     )
-    def test_check_win(self, table, expected):
+    async def test_check_win(self, table, expected):
         model = SingleModel()
         self._set_table(model, table)
-        assert model._check_win() == expected
+        assert await model._check_win() == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,player,coord,expected",
         (
@@ -68,11 +70,11 @@ class TestSingleModel:
             (["X", "O", "", "", "", "", "", "", ""], "O", 8, ["X", "O", "", "", "", "", "", "", "O"]),
         ),
     )
-    def test_make_move(self, table, player, coord, expected):
+    async def test_make_move(self, table, player, coord, expected):
         model = SingleModel()
         self._set_table(model, table)
         model.current_player.value = player
-        model.make_move(coord)
+        await model.make_move(coord)
         table = self._get_table(model)
         assert table == expected
 
@@ -111,6 +113,7 @@ class TestBotModel:
         self._set_table(model, table)
         assert model._validate_move(coord) == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,expected",
         (
@@ -126,11 +129,12 @@ class TestBotModel:
             (["", "", "O", "", "O", "", "O", "", ""], True),
         ),
     )
-    def test_check_win(self, table, expected):
+    async def test_check_win(self, table, expected):
         model = BotModel(is_strategy=False)
         self._set_table(model, table)
-        assert model._check_win() == expected
+        assert await model._check_win() == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,player,coord,expected",
         (
@@ -140,15 +144,16 @@ class TestBotModel:
             (["X", "O", "", "", "", "", "", "", ""], "O", 7, ["X", "O", "", "", "", "", "", "O", "X"]),
         ),
     )
-    def test_make_move(self, table, player, coord, expected):
+    async def test_make_move(self, table, player, coord, expected):
         with mock.patch("random.randint", return_value=8):
             model = BotModel(is_strategy=False)
             self._set_table(model, table)
             model.current_player.value = player
-            model.make_move(coord)
+            await model.make_move(coord)
             table = self._get_table(model)
             assert table == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,player,coord,expected",
         (
@@ -160,15 +165,16 @@ class TestBotModel:
             (["X", "", "O", "", "", "", "", "", ""], "X", 3, ["X", "", "O", "X", "", "", "O", "", ""]),
         ),
     )
-    def test_make_move(self, table, player, coord, expected):
+    async def test_make_move(self, table, player, coord, expected):
         with mock.patch("random.randint", return_value=8):
             model = BotModel(is_strategy=True)
             self._set_table(model, table)
             model.current_player.value = player
-            model.make_move(coord)
+            await model.make_move(coord)
             table = self._get_table(model)
             assert table == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,player,expected",
         (
@@ -179,15 +185,16 @@ class TestBotModel:
             (["X", "O", "", "", "X", "", "", "", ""], "O", ["X", "O", "", "", "X", "", "", "", "O"]),
         ),
     )
-    def test_make_move_bot_strategy(self, table, player, expected):
+    async def test_make_move_bot_strategy(self, table, player, expected):
         with mock.patch("random.randint", return_value=8):
             model = BotModel(is_strategy=True)
             self._set_table(model, table)
             model.current_player.value = player
-            model.make_move_bot()
+            await model.make_move_bot()
             table = self._get_table(model)
             assert table == expected
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,player,expected",
         (
@@ -198,11 +205,11 @@ class TestBotModel:
             (["X", "O", "", "", "X", "", "", "", ""], "O", ["X", "O", "", "", "X", "", "", "", "O"]),
         ),
     )
-    def test_make_move_bot_random(self, table, player, expected):
+    async def test_make_move_bot_random(self, table, player, expected):
         with mock.patch("random.randint", return_value=8):
             model = BotModel(is_strategy=False)
             self._set_table(model, table)
             model.current_player.value = player
-            model.make_move_bot()
+            await model.make_move_bot()
             table = self._get_table(model)
             assert table == expected
