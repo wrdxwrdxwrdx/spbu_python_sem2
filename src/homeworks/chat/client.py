@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import time
 from argparse import ArgumentParser
 from asyncio import StreamReader, StreamWriter
 
@@ -33,12 +34,11 @@ class Client:
 
     async def main(self) -> None:
         reader, writer = await self.connect()
-        read_task = asyncio.create_task(self.get_message(reader))
-        logger.info("IM STARTING CLOSING")
-        try:
-            await self.send_message(writer)
-        except ConnectionError as err:
-            print(err)
+        loop = asyncio.get_event_loop()
+        read_task = loop.create_task(self.get_message(reader))
+        write_task = loop.create_task(self.send_message(writer))
+        while loop.is_running():
+            await asyncio.sleep(0)
 
 
 if __name__ == "__main__":
