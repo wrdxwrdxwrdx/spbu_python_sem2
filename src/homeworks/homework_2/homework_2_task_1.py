@@ -1,6 +1,5 @@
 from inspect import getfullargspec
 
-from src.homeworks.homework_1.homework_1_task_1 import Registry
 from src.homeworks.homework_2.storage import *
 
 COMMAND_EXPLANATION = (
@@ -12,15 +11,6 @@ COMMAND_EXPLANATION = (
     "To see Available Command List enter 'Commands'.\n"
     "for example: 'ChangeIndex 2 3': \n"
 )
-
-
-def create_action_registry() -> Registry[Action]:
-    registry = Registry[Action]()
-
-    for sub_cls in Action.__subclasses__():
-        registry.register(sub_cls.__name__)(sub_cls)
-
-    return registry
 
 
 def create_storage() -> PerformedCommandStorage[Action]:
@@ -47,7 +37,7 @@ def get_command_args(command_line: str) -> tuple[str, list[int]]:
 
 
 def main() -> None:
-    action_registry = create_action_registry()
+    action_registry = registry
     all_commands = list(action_registry.classes.keys())
     storage = create_storage()
 

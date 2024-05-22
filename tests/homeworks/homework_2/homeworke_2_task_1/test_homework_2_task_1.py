@@ -1,4 +1,3 @@
-import random
 from io import StringIO
 
 import hypothesis.strategies as st
@@ -249,7 +248,7 @@ class TestStorage:
 
     @given(st.integers(1, 100))
     def test_storage_mutable_sequence(self, command_number):
-        action_registry = create_action_registry()
+        action_registry = registry
         all_commands = list(action_registry.classes.keys())
         collection = [random.randint(-100, 100) for _ in range(100)]
         storage = PerformedCommandStorage[Action](copy(collection))
@@ -281,7 +280,7 @@ class TestStorage:
 
     @given(st.integers(1, 100))
     def test_storage_set(self, command_number):
-        action_registry = create_action_registry()
+        action_registry = registry
         all_commands = list(action_registry.classes.keys())
         collection = set(random.randint(-100, 100) for _ in range(100))
         storage = PerformedCommandStorage[Action](copy(collection))
@@ -373,7 +372,7 @@ class TestStorage:
             (["list", "1 2 3", "AddToStart World", "q"], "Expected int argument, got str"),
             (
                 ["set", "1 2 3", "AddToStart 123", "q"],
-                "Incompatible collection: expected subclass of MutableSequence, got 'set'",
+                "Incompatible collection: expected subclass of list, got 'set'",
             ),
             (["list", "", "DeleteFromStart", "q"], "Storage is Empty"),
             (["list", "1 2 3", "Undo", "q"], "No actions to Undo"),
