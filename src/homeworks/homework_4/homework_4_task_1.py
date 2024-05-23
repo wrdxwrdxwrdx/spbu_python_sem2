@@ -10,21 +10,27 @@ from sorting_module import *
 def check_time_ms(
     sorting_function: Callable[[list[int], int], list[int]] | Callable[[list[int]], list[int]],
     size: int,
+    n_tries: int = 5,
     *args: int,
     **kwargs: bool,
 ) -> float:
-    array = [random.randint(-100, 100) for _ in range(size)]
     start = time.perf_counter()
-    sorting_function(array, *args, **kwargs)
-    return (time.perf_counter() - start) * 1000
+    for _ in range(n_tries):
+        array = [random.randint(-100, 100) for _ in range(size)]
+        sorting_function(array, *args, **kwargs)
+    return (time.perf_counter() - start) * 1000 / n_tries
 
 
-def create_graph(size: int, threads: list[int], output_path: str, multiprocess: bool = False) -> None:
-    thread_y = [check_time_ms(thread_sort, size, thread_number, multiprocess=multiprocess) for thread_number in threads]
+def create_graph(
+    size: int, threads: list[int], output_path: str, multiprocess: bool = False, n_tries: int = 10
+) -> None:
+    thread_y = [
+        check_time_ms(thread_sort, size, n_tries, thread_number, multiprocess=multiprocess) for thread_number in threads
+    ]
 
     plt.title(f"size: {size}")
     plt.plot(threads, thread_y, label="multiprocess sort" if multiprocess else "thread sort")
-    merge_y = [check_time_ms(merge_sort, size) for _ in threads]
+    merge_y = [check_time_ms(merge_sort, size, n_tries) for _ in threads]
     plt.plot(threads, merge_y, label="merge sort")
 
     plt.xlabel("number of processes" if multiprocess else "number of threads")

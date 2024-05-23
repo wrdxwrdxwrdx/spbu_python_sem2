@@ -1,31 +1,11 @@
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
 
 def merge_sort(array: list[int]) -> list[int]:
-    if len(array) > 1:
-        mid_pointer = len(array) // 2
-        left_array = array[:mid_pointer]
-        right_array = array[mid_pointer:]
-        merge_sort(left_array)
-        merge_sort(right_array)
-        left_pointer = right_pointer = array_pointer = 0
-        while left_pointer < len(left_array) and right_pointer < len(right_array):
-            if left_array[left_pointer] < right_array[right_pointer]:
-                array[array_pointer] = left_array[left_pointer]
-                left_pointer += 1
-            else:
-                array[array_pointer] = right_array[right_pointer]
-                right_pointer += 1
-            array_pointer += 1
-        while left_pointer < len(left_array):
-            array[array_pointer] = left_array[left_pointer]
-            left_pointer += 1
-            array_pointer += 1
-        while right_pointer < len(right_array):
-            array[array_pointer] = right_array[right_pointer]
-            right_pointer += 1
-            array_pointer += 1
-    return array
+    if len(array) <= 1:
+        return array
+    mid_pointer = len(array) // 2
+    return connect_arrays(merge_sort(array[:mid_pointer]), merge_sort(array[mid_pointer:]))
 
 
 def split_array(array: list[int], part_numer: int) -> list[list[int]]:
@@ -59,10 +39,10 @@ def thread_sort(array: list[int], thread_number: int, multiprocess: bool = False
     splitted_array = split_array(array, thread_number)
     executor = ProcessPoolExecutor if multiprocess else ThreadPoolExecutor
 
-    result: list[int] = []
-
     with executor(max_workers=thread_number) as executor:
         future_splitted_array = [executor.submit(merge_sort, array_part) for array_part in splitted_array]
-        for array_part in future_splitted_array:
-            result = connect_arrays(result, array_part.result())
-        return result
+        while len(future_splitted_array) > 1:
+            array_1 = future_splitted_array.pop(0).result()
+            array_2 = future_splitted_array.pop(0).result()
+            future_splitted_array.append(executor.submit(connect_arrays, array_1, array_2))
+        return future_splitted_array[0].result()
