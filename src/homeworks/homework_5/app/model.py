@@ -70,10 +70,10 @@ class TicTacToeModel:
 
 class SinglePlayer(Player):
     def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
-        if coord:
+        if coord is not None:
             table[coord].value = self.sign
         else:
-            raise ValueError("Player's make_move coord must be int, not None")
+            raise ValueError("SinglePlayer's make_move coord must be int, not None")
 
 
 class BotPlayer(Player):
