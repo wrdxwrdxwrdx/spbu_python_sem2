@@ -27,7 +27,7 @@ class SideChoiceView(ttk.Frame):
 
     def __init__(self) -> None:
         super().__init__()
-        #
+
         self.grid_columnconfigure(0, weight=2)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
