@@ -43,26 +43,6 @@ class TestAction:
         assert action.inverse_action(collection) == collection_copy
 
     @given(st.integers(1, 100))
-    def test_add_to_set(self, collection_length):
-        collection = set(random.randint(-100, 100) for _ in range(collection_length))
-        collection_copy = copy(collection)
-        number = random.randint(-100, 100)
-        action = AddToSet(number)
-        assert action.action(collection) == {*collection_copy, number}
-        assert action.inverse_action(collection) == collection_copy
-
-    @given(st.integers(1, 100))
-    def test_delete_from_set(self, collection_length):
-        collection = set(random.randint(-100, 100) for _ in range(collection_length))
-        collection_copy = copy(collection)
-        number = random.choice(list(collection))
-        action = DeleteFromSet(number)
-        collection_no_number = collection_copy
-        collection_no_number.remove(number)
-        assert action.action(collection) == collection_no_number
-        assert action.inverse_action(collection) == {*collection_no_number, number}
-
-    @given(st.integers(1, 100))
     def test_change_index(self, collection_length):
         collection = list(random.randint(-100, 100) for _ in range(collection_length))
         collection_copy = copy(collection)
@@ -174,16 +154,6 @@ class TestAction:
             action = DeleteFromEnd()
             action.inverse_action([])
 
-    def test_add_to_set_error(self):
-        with pytest.raises(EmptyStorageError):
-            action = AddToSet(1)
-            action.inverse_action(set())
-
-    def test_delete_from_set_error(self):
-        with pytest.raises(ValueError):
-            action = DeleteFromSet(1)
-            action.action(set())
-
     def test_change_index_error(self):
         with pytest.raises(IndexError):
             action = ChangeIndex(-10, 6)
@@ -230,8 +200,7 @@ class TestStorage:
         "Enter 'Undo' to cancel action.\n"
         "To exit enter 'q'.\n"
         "To see Object Collection enter 'Collection'.\n"
-        "To see Full Command List enter 'AllCommands'.\n"
-        "To see Available Command List enter 'Commands'.\n"
+        "To see Full Command List enter 'Commands'.\n"
         "for example: 'ChangeIndex 2 3': \n"
     )
 
@@ -256,8 +225,7 @@ class TestStorage:
         available_commands_annotation = {}
         for command in all_commands:
             action = action_registry.dispatch(command)
-            if isinstance(storage.collection, action.object_collection_type):
-                available_commands_annotation[command] = getfullargspec(action.__init__).args[1:]
+            available_commands_annotation[command] = getfullargspec(action.__init__).args[1:]
 
         for _ in range(command_number):
             if len(storage.collection) == 0:
@@ -271,61 +239,28 @@ class TestStorage:
             storage.undo()
         assert storage.collection == collection
 
-    def get_func_args_set(self, commands_annotation: dict[str, list[str]], command: str, collection: set):
-        args = []
-        for argument in commands_annotation[command]:
-            if argument == "number":
-                args.append(random.choice(list(collection)))
-        return args
-
-    @given(st.integers(1, 100))
-    def test_storage_set(self, command_number):
-        action_registry = registry
-        all_commands = list(action_registry.classes.keys())
-        collection = set(random.randint(-100, 100) for _ in range(100))
-        storage = PerformedCommandStorage[Action](copy(collection))
-
-        available_commands_annotation = {}
-        for command in all_commands:
-            action = action_registry.dispatch(command)
-            if isinstance(storage.collection, action.object_collection_type):
-                available_commands_annotation[command] = getfullargspec(action.__init__).args[1:]
-
-        for _ in range(command_number):
-            if len(storage.collection) == 0:
-                break
-            command = random.choice(list(available_commands_annotation.keys()))
-            action = action_registry.dispatch(command)
-            args = self.get_func_args_set(available_commands_annotation, command, storage.collection)
-            storage.apply(action(*args))
-
-        while len(storage.action_list):
-            storage.undo()
-        assert storage.collection == collection
-
     @pytest.mark.parametrize(
         "user_input, expected_output",
         [
             (
-                ["list", "1 2 3", "q"],
+                ["1 2 3", "q"],
                 [
                     "",
                 ],
             ),
             (
-                ["list", "1 2 3", "AddToStart 0", "Collection", "q"],
+                ["1 2 3", "AddToStart 0", "Collection", "q"],
                 [
                     "\n[0, 1, 2, 3]",
                 ],
             ),
-            (["list", "1 2 3", "AddToStart 0", "Collection", "Collection", "q"], ["\n[0, 1, 2, 3]", "[0, 1, 2, 3]"]),
+            (["1 2 3", "AddToStart 0", "Collection", "Collection", "q"], ["\n[0, 1, 2, 3]", "[0, 1, 2, 3]"]),
             (
-                ["list", "1 2 3", "AddToStart 0", "Collection", "DeleteFromStart", "Collection", "q"],
+                ["1 2 3", "AddToStart 0", "Collection", "DeleteFromStart", "Collection", "q"],
                 ["\n[0, 1, 2, 3]", "[1, 2, 3]"],
             ),
             (
                 [
-                    "list",
                     "1 2 3",
                     "AddToStart 0",
                     "Collection",
@@ -336,10 +271,6 @@ class TestStorage:
                     "q",
                 ],
                 ["\n[0, 1, 2, 3]", "[1, 2, 3]", "[0, 1, 2, 3]"],
-            ),
-            (
-                ["set", "1 2 3", "AddToSet 0", "Collection", "DeleteFromSet 1", "Collection", "q"],
-                ["\n{0, 1, 2, 3}", "{0, 2, 3}"],
             ),
         ],
     )
@@ -352,30 +283,12 @@ class TestStorage:
         assert output == self.COMMAND_EXPLANATION + "\n".join(expected_output) + "\n"
 
     @pytest.mark.parametrize(
-        "user_input, exception",
-        [
-            (["asd", "1 2 3"], IncorrectCollectionError),
-            (["list", "1 asdasd 3"], ValueError),
-        ],
-    )
-    def test_create_collection_error(self, monkeypatch, user_input, exception) -> None:
-        monkeypatch.setattr("builtins.input", lambda _: user_input.pop(0))
-        fake_output = StringIO()
-        monkeypatch.setattr("sys.stdout", fake_output)
-        with pytest.raises(exception):
-            main()
-
-    @pytest.mark.parametrize(
         "user_input, exception_text",
         [
-            (["list", "1 2 3", "Hello 1", "q"], "No actions are named 'Hello'"),
-            (["list", "1 2 3", "AddToStart World", "q"], "Expected int argument, got str"),
-            (
-                ["set", "1 2 3", "AddToStart 123", "q"],
-                "Incompatible collection: expected subclass of list, got 'set'",
-            ),
-            (["list", "", "DeleteFromStart", "q"], "Storage is Empty"),
-            (["list", "1 2 3", "Undo", "q"], "No actions to Undo"),
+            (["1 2 3", "Hello 1", "q"], "No actions are named 'Hello'"),
+            (["1 2 3", "AddToStart World", "q"], "Expected int argument, got str"),
+            (["", "DeleteFromStart", "q"], "Storage is Empty"),
+            (["1 2 3", "Undo", "q"], "No actions to Undo"),
         ],
     )
     def test_main_error(self, monkeypatch, user_input, exception_text) -> None:

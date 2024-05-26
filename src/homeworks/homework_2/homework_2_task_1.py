@@ -7,23 +7,18 @@ COMMAND_EXPLANATION = (
     "Enter 'Undo' to cancel action.\n"
     "To exit enter 'q'.\n"
     "To see Object Collection enter 'Collection'.\n"
-    "To see Full Command List enter 'AllCommands'.\n"
-    "To see Available Command List enter 'Commands'.\n"
+    "To see Full Command List enter 'Commands'.\n"
     "for example: 'ChangeIndex 2 3': \n"
 )
 
 
-def create_storage() -> PerformedCommandStorage[Action]:
-    collection_type = input("type: ")
-
+def create_storage() -> PerformedCommandStorage:
     try:
         object_list = input("Enter storage of int`s (for example: 1 2 3): ")
-        collection = eval(f"{collection_type}(map(int, object_list.split()))")
-    except NameError:
-        raise IncorrectCollectionError(collection_type)
+        collection = list(map(int, object_list.split()))
     except ValueError:
         raise ValueError("Expected int, got str")
-    return PerformedCommandStorage[Action](collection)
+    return PerformedCommandStorage(collection)
 
 
 def get_command_args(command_line: str) -> tuple[str, list[int]]:
@@ -42,11 +37,8 @@ def main() -> None:
     storage = create_storage()
 
     all_commands_annotation = []
-    available_commands_annotation = []
     for command in all_commands:
         action = action_registry.dispatch(command)
-        if isinstance(storage.collection, action.object_collection_type):
-            available_commands_annotation.append(command + " " + "  ".join(getfullargspec(action.__init__).args[1:]))
         all_commands_annotation.append(command + " " + "  ".join(getfullargspec(action.__init__).args[1:]))
 
     print(COMMAND_EXPLANATION)
@@ -62,14 +54,8 @@ def main() -> None:
                 storage.undo()
             elif command_line == "Collection":
                 print(storage.collection)
-            elif command_line == "AllCommands":
-                print("\n".join(all_commands_annotation))
             elif command_line == "Commands":
-                print(
-                    "\n".join(available_commands_annotation)
-                    if available_commands_annotation
-                    else "No available commands"
-                )
+                print("\n".join(all_commands_annotation))
             elif command in all_commands:
                 action = action_registry.dispatch(command)
                 storage.apply(action(*args))

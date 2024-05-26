@@ -6,19 +6,14 @@ from typing import Collection, Generic, Optional, TypeVar
 from src.homeworks.homework_1.homework_1_task_1 import Registry
 from src.homeworks.homework_2.storage_exceptions import *
 
-C = TypeVar("C")
-T = TypeVar("T")
 
-
-class Action(Generic[T]):
-    object_collection_type: type
-
+class Action:
     @abc.abstractmethod
-    def action(self, object_collection: T) -> T:
+    def action(self, object_collection: list[int]) -> list[int]:
         ...
 
     @abc.abstractmethod
-    def inverse_action(self, object_collection: T) -> T:
+    def inverse_action(self, object_collection: list[int]) -> list[int]:
         ...
 
 
@@ -27,8 +22,6 @@ registry = Registry[Action](default=None)
 
 @registry.register("AddToStart")
 class AddToStart(Action):
-    object_collection_type = list
-
     def __init__(self, number: int) -> None:
         self.number = number
 
@@ -46,8 +39,6 @@ class AddToStart(Action):
 
 @registry.register("DeleteFromStart")
 class DeleteFromStart(Action):
-    object_collection_type = list
-
     def __init__(self) -> None:
         self.deleted_obj: Optional[int] = None
 
@@ -68,8 +59,6 @@ class DeleteFromStart(Action):
 
 @registry.register("AddToEnd")
 class AddToEnd(Action):
-    object_collection_type = list
-
     def __init__(self, number: int) -> None:
         self.number = number
 
@@ -87,8 +76,6 @@ class AddToEnd(Action):
 
 @registry.register("DeleteFromEnd")
 class DeleteFromEnd(Action):
-    object_collection_type = list
-
     def __init__(self) -> None:
         self.deleted_number: Optional[int] = None
 
@@ -107,52 +94,8 @@ class DeleteFromEnd(Action):
             raise UnexpectedInverseAction()
 
 
-@registry.register("AddToSet")
-class AddToSet(Action):
-    object_collection_type = set
-
-    def __init__(self, number: int) -> None:
-        self.number: Optional[int] = number
-
-    def action(self, object_collection: set[int]) -> set[int]:
-        if self.number in object_collection:
-            self.number = None
-        elif self.number is not None:
-            object_collection.add(self.number)
-        return object_collection
-
-    def inverse_action(self, object_collection: set[int]) -> set[int]:
-        if len(object_collection) > 0:
-            if self.number is not None:
-                object_collection.remove(self.number)
-            return object_collection
-        else:
-            raise EmptyStorageError()
-
-
-@registry.register("DeleteFromSet")
-class DeleteFromSet(Action):
-    object_collection_type = set
-
-    def __init__(self, number: int) -> None:
-        self.number = number
-
-    def action(self, object_collection: set[int]) -> set[int]:
-        if self.number in object_collection:
-            object_collection.remove(self.number)
-            return object_collection
-        else:
-            raise ValueError(f"No element {self.number} in Storage")
-
-    def inverse_action(self, object_collection: set[int]) -> set[int]:
-        object_collection.add(self.number)
-        return object_collection
-
-
 @registry.register("ChangeIndex")
 class ChangeIndex(Action):
-    object_collection_type = list
-
     def __init__(self, first_index: int, second_index: int) -> None:
         self.first_index = first_index
         self.second_index = second_index
@@ -174,8 +117,6 @@ class ChangeIndex(Action):
 
 @registry.register("AddValue")
 class AddValue(Action):
-    object_collection_type = list
-
     def __init__(self, index: int, number: int) -> None:
         self.index = index
         self.number = number
@@ -197,8 +138,6 @@ class AddValue(Action):
 
 @registry.register("Reverse")
 class Reverse(Action):
-    object_collection_type = list
-
     def action(self, object_collection: list[int]) -> list[int]:
         return object_collection[::-1]
 
@@ -208,8 +147,6 @@ class Reverse(Action):
 
 @registry.register("MultiplyValue")
 class MultiplyValue(Action):
-    object_collection_type = list
-
     def __init__(self, index: int, number: int) -> None:
         self.index = index
         self.value = number
@@ -231,8 +168,6 @@ class MultiplyValue(Action):
 
 @registry.register("SortAscending")
 class SortAscending(Action):
-    object_collection_type = list
-
     def __init__(self) -> None:
         self.unsorted_collection: Optional[list[int]] = None
 
@@ -250,8 +185,6 @@ class SortAscending(Action):
 
 @registry.register("SortDescending")
 class SortDescending(Action):
-    object_collection_type = list
-
     def __init__(self) -> None:
         self.unsorted_collection: Optional[list[int]] = None
 
@@ -269,8 +202,6 @@ class SortDescending(Action):
 
 @registry.register("Shuffle")
 class Shuffle(Action):
-    object_collection_type = list
-
     def __init__(self) -> None:
         self.unshuffled_collection: Optional[list[int]] = None
 
@@ -286,20 +217,14 @@ class Shuffle(Action):
             raise UnexpectedInverseAction()
 
 
-class PerformedCommandStorage(Generic[C]):
-    def __init__(self, collection: Collection[C]) -> None:
+class PerformedCommandStorage:
+    def __init__(self, collection: list[int]) -> None:
         self.collection = collection
         self.action_list: list[Action] = []
 
     def apply(self, action: Action) -> None:
-        object_collection_type = type(self.collection)
-        if issubclass(object_collection_type, action.object_collection_type):
-            self.collection = action.action(self.collection)
-            self.action_list.append(action)
-        else:
-            raise IncorrectCollectionError(
-                object_collection_type.__name__, expected_collection_name=action.object_collection_type.__name__
-            )
+        self.collection = action.action(self.collection)
+        self.action_list.append(action)
 
     def undo(self) -> None:
         if len(self.action_list) > 0:
