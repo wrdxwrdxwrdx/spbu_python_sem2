@@ -220,7 +220,7 @@ class TestStorage:
         action_registry = registry
         all_commands = list(action_registry.classes.keys())
         collection = [random.randint(-100, 100) for _ in range(100)]
-        storage = PerformedCommandStorage[Action](copy(collection))
+        storage = PerformedCommandStorage(copy(collection))
 
         available_commands_annotation = {}
         for command in all_commands:
