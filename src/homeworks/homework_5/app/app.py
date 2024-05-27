@@ -1,4 +1,6 @@
-from src.homeworks.homework_5.app.view_model import *
+from tkinter import Tk
+
+from view_model import ViewModel
 
 
 class App:
@@ -8,7 +10,7 @@ class App:
 
     def __init__(self) -> None:
         self._root = self._setup_root()
-        self._viewmodel = ViewModel(self._root)
+        self._viewmodel: ViewModel = ViewModel(self._root)
 
     def _setup_root(self) -> Tk:
         root = Tk()

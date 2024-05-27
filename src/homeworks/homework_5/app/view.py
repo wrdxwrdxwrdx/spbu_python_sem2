@@ -1,12 +1,10 @@
 from tkinter import Tk, ttk
-from tkinter import font as tkFont
 
 
 class ModeChoiceView(ttk.Frame):
     GREETINGS = "Hello! Chose TicTacToe game mod"
     SINGLE_LABEL = "SINGLE"
     BOT_LABEL = "BOT"
-    MULTI_LABEL = "MULTIPLAYER"
 
     def __init__(self) -> None:
         super().__init__()
@@ -22,9 +20,6 @@ class ModeChoiceView(ttk.Frame):
 
         self.bot_btn = ttk.Button(self, text=self.BOT_LABEL)
         self.bot_btn.grid(row=4, column=1, pady=50, sticky="NSEW")
-
-        self.multi_btn = ttk.Button(self, text=self.MULTI_LABEL)
-        self.multi_btn.grid(row=5, column=1, pady=50, sticky="NSEW")
 
 
 class SideChoiceView(ttk.Frame):
@@ -94,47 +89,3 @@ class StrategyChoiceView(ttk.Frame):
 
         self.smart_btn = ttk.Button(self, text=self.SMART_LABEL)
         self.smart_btn.grid(row=4, column=1, pady=50, sticky="NSEW")
-
-
-class RoomChoiceView(ttk.Frame):
-    GREETINGS = "Enter server Ip and room name, password"
-    ROOM_NAME = "Enter room name"
-    ROOM_PASSWORD = "Enter room password"
-    IP = "127.0.0.1:8888"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        label_font = tkFont.Font(family='Helvetica', size=20)
-        entry_font = tkFont.Font(family='Helvetica', size=30)
-
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
-        self.header = ttk.Label(self, text=self.GREETINGS)
-        self.header.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
-
-        self.ip_entry = ttk.Entry(self, justify='center', font=entry_font)
-        self.ip_entry.insert(0, self.IP)
-        self.ip_entry.grid(row=3, column=0, columnspan=2, pady=15, sticky="NSEW")
-
-        self.room_name_label = ttk.Label(self, text=self.ROOM_NAME, font=label_font, justify='center')
-        self.room_name_entry = ttk.Entry(self, justify='center', font=entry_font)
-        self.room_name_label.grid(row=4, column=0, columnspan=2)
-        self.room_name_entry.grid(row=5, column=0, columnspan=2, pady=15, sticky="NSEW")
-
-        self.room_password_label = ttk.Label(self, text=self.ROOM_PASSWORD, font=label_font, justify='center')
-        self.room_password_entry = ttk.Entry(self, justify='center', font=entry_font)
-        self.room_password_label.grid(row=6, column=0, columnspan=2)
-        self.room_password_entry.grid(row=7, column=0, columnspan=2, pady=15, sticky="NSEW")
-
-        self.smart_btn = ttk.Button(self, text="X")
-        self.smart_btn.grid(row=8, column=0, pady=15, padx=50, sticky="NSEW")
-
-        self.smart_btn = ttk.Button(self, text="O")
-        self.smart_btn.grid(row=8, column=1, pady=15, padx=50, sticky="NSEW")
-
-        self.smart_btn = ttk.Button(self, text="Create")
-        self.smart_btn.grid(row=9, column=0, padx=15, sticky="NSEW")
-
-        self.smart_btn = ttk.Button(self, text="Connect")
-        self.smart_btn.grid(row=9, column=1, padx=15, sticky="NSEW")

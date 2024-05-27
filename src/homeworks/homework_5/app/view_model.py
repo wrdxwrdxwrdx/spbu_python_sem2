@@ -1,11 +1,12 @@
 import abc
 import asyncio
+import time
 from functools import partial
 from tkinter import Tk, ttk
 from typing import Callable, Optional
 
-from model import BotPlayer, TicTacToeModel, SinglePlayer, Player
-from view import CongratulationsView, GameView, ModeChoiceView, SideChoiceView, StrategyChoiceView, RoomChoiceView
+from model import BotPlayer, Player, SinglePlayer, TicTacToeModel
+from view import CongratulationsView, GameView, ModeChoiceView, SideChoiceView, StrategyChoiceView
 
 loop = asyncio.new_event_loop()
 
@@ -26,7 +27,6 @@ class ViewModel:
         self._root = root
         self._viewmodels: dict[str, IViewModel] = {
             "ModeChoice": ModeChoiceViewModel(self._model),
-            # "RoomChoice": RoomChoiceViewModel(self._model),
             "StrategyChoice": StrategyChoiceViewModel(self._model),
             "SideChoice": SideChoiceViewModel(self._model),
             "Game": GameViewModel(self._model),
@@ -56,10 +56,13 @@ class ModeChoiceViewModel(IViewModel):
 
         def bot_btn_cmd() -> None:
             self._model.current_player.add_callback(
-                lambda value: asyncio.get_event_loop().create_task(self._model.make_move(None)) if isinstance(value,
-                                                                                                              BotPlayer) else ...)
-            view_model.switch("StrategyChoice",
-                              {"ViewModel": view_model, "me": SinglePlayer(), "opponent": BotPlayer()})
+                lambda value: asyncio.get_event_loop().create_task(self._model.make_move(None))
+                if isinstance(value, BotPlayer)
+                else ...
+            )
+            view_model.switch(
+                "StrategyChoice", {"ViewModel": view_model, "me": SinglePlayer(), "opponent": BotPlayer()}
+            )
 
         view.single_btn.config(command=single_btn_cmd)
         view.bot_btn.config(command=bot_btn_cmd)
@@ -72,45 +75,20 @@ class ModeChoiceViewModel(IViewModel):
         return frame
 
 
-#
-# class RoomChoiceViewModel(IViewModel):
-#     def _bind(self):
-#         pass
-#
-#     def start(self, root: Tk, data: dict) -> ttk.Frame:
-#         if "ViewModel" not in data:
-#             raise RuntimeError("ViewModel must be in data")
-#         if "opponent" not in data:
-#             raise RuntimeError("opponent must be in data")
-#         if "me" not in data:
-#             raise RuntimeError("me must be in data")
-#         frame = StrategyChoiceView()
-#         self._bind(frame, data["ViewModel"], data["opponent"], data["me"])
-#         return frame
-#
-
 class StrategyChoiceViewModel(IViewModel):
     def _bind(self, view: StrategyChoiceView, view_model: ViewModel, bot: BotPlayer, me: Player) -> None:
         def random_btn_cmd() -> None:
             bot.is_strategy = False
             view_model.switch(
                 "SideChoice",
-                {
-                    "me": me,
-                    "opponent": bot,
-                    "ViewModel": view_model
-                },
+                {"me": me, "opponent": bot, "ViewModel": view_model},
             )
 
         def smart_btn_cmd() -> None:
             bot.is_strategy = True
             view_model.switch(
                 "SideChoice",
-                {
-                    "me": me,
-                    "opponent": bot,
-                    "ViewModel": view_model
-                },
+                {"me": me, "opponent": bot, "ViewModel": view_model},
             )
 
         view.random_btn.config(command=random_btn_cmd)

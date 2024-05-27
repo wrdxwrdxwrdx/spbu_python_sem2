@@ -1,7 +1,6 @@
 import abc
 import asyncio
 import random
-from asyncio import StreamReader, StreamWriter
 from copy import copy
 from typing import Optional
 
@@ -21,12 +20,13 @@ class Player(metaclass=abc.ABCMeta):
 
 
 class TicTacToeModel:
-    table: list[Observable] = [Observable() for _ in range(9)]
-    winner: Observable[str] = Observable()
-    x_player: Player
-    o_player: Player
-    current_player: Observable[Player] = Observable()
-    loop = asyncio.get_event_loop()
+    def __init__(self) -> None:
+        self.table: list[Observable] = [Observable() for _ in range(9)]
+        self.winner: Observable[str] = Observable()
+        self.x_player: Optional[Player] = None
+        self.o_player: Optional[Player] = None
+        self.current_player: Observable[Player] = Observable()
+        self.loop = asyncio.get_event_loop()
 
     async def _check_win(self) -> bool:
         for row in range(3):
@@ -47,9 +47,11 @@ class TicTacToeModel:
         return (coord is None) or (self.table[coord].value is None)
 
     def restart(self) -> None:
-        self.table: list[Observable] = [Observable() for _ in range(9)]
-        self.winner: Observable[str] = Observable()
-        self.current_player: Observable[Player] = Observable()
+        self.table = [Observable() for _ in range(9)]
+        self.winner = Observable()
+        self.current_player = Observable()
+        self.x_player = None
+        self.o_player = None
 
     async def make_move(self, coord: Optional[int]) -> None:
         if self._validate_move(coord):
@@ -125,16 +127,3 @@ class BotPlayer(Player):
 
     async def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
         table[await self._generate_bot_move(table)].value = self.sign
-
-
-# class MultiPlayer(Player):
-#     def __init__(self, reader: StreamReader, writer: StreamWriter) -> None:
-#         super().__init__()
-#         self.reader = reader
-#         self.writer = writer
-#
-#     async def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
-#         table_info = ",".join([obs.value if obs.value else "" for obs in table])
-#         self.writer.write(f"{table_info},{coord}".encode())
-#
-#
