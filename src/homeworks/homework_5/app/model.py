@@ -1,5 +1,4 @@
 import abc
-import asyncio
 import random
 from copy import copy
 from typing import Optional
@@ -15,7 +14,7 @@ class Player(metaclass=abc.ABCMeta):
         self.sign = sign
 
     @abc.abstractmethod
-    async def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
+    def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
         ...
 
 
@@ -26,9 +25,8 @@ class TicTacToeModel:
         self.x_player: Optional[Player] = None
         self.o_player: Optional[Player] = None
         self.current_player: Observable[Player] = Observable()
-        self.loop = asyncio.get_event_loop()
 
-    async def _check_win(self) -> bool:
+    def _check_win(self) -> bool:
         for row in range(3):
             if self.table[row * 3].value == self.table[row * 3 + 1].value == self.table[row * 3 + 2].value is not None:
                 return True
@@ -53,15 +51,15 @@ class TicTacToeModel:
         self.x_player = None
         self.o_player = None
 
-    async def make_move(self, coord: Optional[int]) -> None:
+    def make_move(self, coord: Optional[int]) -> None:
         if self._validate_move(coord):
             if self.current_player.value:
-                await self.current_player.value.make_move(self.table, coord)
+                self.current_player.value.make_move(self.table, coord)
             else:
                 raise ValueError("current player is None")
 
             # Check winner
-            if await self._check_win():
+            if self._check_win():
                 self.winner.value = self.current_player.value.sign
             elif all(obs.value for obs in self.table):
                 self.winner.value = "DRAW"
@@ -74,7 +72,7 @@ class TicTacToeModel:
 
 
 class SinglePlayer(Player):
-    async def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
+    def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
         if coord is not None:
             table[coord].value = self.sign
         else:
@@ -87,7 +85,7 @@ class BotPlayer(Player):
         self.is_strategy = is_strategy
 
     @staticmethod
-    async def _check_win_table(table: list[Optional[str]]) -> bool:
+    def _check_win_table(table: list[Optional[str]]) -> bool:
         for row in range(3):
             if table[row * 3] == table[row * 3 + 1] == table[row * 3 + 2] is not None:
                 return True
@@ -102,7 +100,7 @@ class BotPlayer(Player):
             return True
         return False
 
-    async def _generate_bot_move(self, table: list[Observable]) -> int:
+    def _generate_bot_move(self, table: list[Observable]) -> int:
         def _generate_random_move() -> int:
             valid_moves = []
             for index, obs in enumerate(table):
@@ -115,15 +113,15 @@ class BotPlayer(Player):
                 if table[coord].value is None:
                     table_copy = copy([obs.value for obs in table])
                     table_copy[coord] = "O" if self.sign == "O" else "X"
-                    if await self._check_win_table(table_copy):
+                    if self._check_win_table(table_copy):
                         return coord
             for coord in range(9):
                 if table[coord].value is None:
                     table_copy = copy([obs.value for obs in table])
                     table_copy[coord] = "X" if self.sign == "O" else "O"
-                    if await self._check_win_table(table_copy):
+                    if self._check_win_table(table_copy):
                         return coord
         return _generate_random_move()
 
-    async def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
-        table[await self._generate_bot_move(table)].value = self.sign
+    def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
+        table[self._generate_bot_move(table)].value = self.sign

@@ -16,7 +16,6 @@ class TestPlayer:
 
 
 class TestSinglePlayer(TestPlayer):
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "sign,table,coord,expected",
         (
@@ -25,15 +24,14 @@ class TestSinglePlayer(TestPlayer):
             ("X", ["X", "O", "", "", "", "", "", "", ""], 2, ["X", "O", "X", "", "", "", "", "", ""]),
         ),
     )
-    async def test_make_move(self, sign, table, coord, expected):
+    def test_make_move(self, sign, table, coord, expected):
         player = SinglePlayer(sign)
         obs_table = self.table_to_observable(table)
-        await player.make_move(obs_table, coord)
+        player.make_move(obs_table, coord)
         assert self.table_to_str(obs_table) == expected
 
 
 class TestBotPlayer(TestPlayer):
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,expected",
         (
@@ -44,11 +42,10 @@ class TestBotPlayer(TestPlayer):
             (["X", "X", "X", "O", "O", "", "", "", ""], True),
         ),
     )
-    async def test_check_win_table(self, table, expected):
+    def test_check_win_table(self, table, expected):
         obs_table = self.table_to_observable(table)
-        assert await BotPlayer._check_win_table([obs.value for obs in obs_table]) == expected
+        assert BotPlayer._check_win_table([obs.value for obs in obs_table]) == expected
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "sign,table,coord",
         (
@@ -57,14 +54,13 @@ class TestBotPlayer(TestPlayer):
             ("X", ["X", "O", "", "", "", "", "", "", ""], 2),
         ),
     )
-    async def test_generate_random(self, sign, table, coord):
+    def test_generate_random(self, sign, table, coord):
         with mock.patch("random.choice", return_value=coord):
             player = BotPlayer(is_strategy=False)
             player.sign = sign
             obs_table = self.table_to_observable(table)
-            assert await player._generate_bot_move(obs_table) == coord
+            assert player._generate_bot_move(obs_table) == coord
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "sign,table,expected",
         (
@@ -75,15 +71,14 @@ class TestBotPlayer(TestPlayer):
             ("O", ["", "", "", "X", "X", "O", "", "X", "O"], ["", "", "O", "X", "X", "O", "", "X", "O"]),
         ),
     )
-    async def test_make_move_strategy(self, sign, table, expected):
+    def test_make_move_strategy(self, sign, table, expected):
         player = BotPlayer(is_strategy=True)
         player.sign = sign
         obs_table = self.table_to_observable(table)
-        bot_coord = await player._generate_bot_move(obs_table)
+        bot_coord = player._generate_bot_move(obs_table)
         table[bot_coord] = sign
         assert table == expected
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "sign,table,coord,expected",
         (
@@ -92,12 +87,12 @@ class TestBotPlayer(TestPlayer):
             ("X", ["X", "O", "", "", "", "", "", "", ""], 2, ["X", "O", "X", "", "", "", "", "", ""]),
         ),
     )
-    async def test_make_move_random(self, sign, table, coord, expected):
+    def test_make_move_random(self, sign, table, coord, expected):
         with mock.patch("random.choice", return_value=coord):
             player = BotPlayer(is_strategy=False)
             player.sign = sign
             obs_table = self.table_to_observable(table)
-            bot_coord = await player._generate_bot_move(obs_table)
+            bot_coord = player._generate_bot_move(obs_table)
             table[bot_coord] = sign
             assert table == expected
 
@@ -117,7 +112,6 @@ class TestTicTacToeModel(TestPlayer):
         model.table = self.table_to_observable(table)
         assert model._validate_move(coord) == expected
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "table,expected",
         (
@@ -128,12 +122,11 @@ class TestTicTacToeModel(TestPlayer):
             (["X", "X", "X", "O", "O", "", "", "", ""], True),
         ),
     )
-    async def test_check_win(self, table, expected):
+    def test_check_win(self, table, expected):
         model = TicTacToeModel()
         model.table = self.table_to_observable(table)
-        assert await model._check_win() == expected
+        assert model._check_win() == expected
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "sign,table,coord,expected",
         (
@@ -142,7 +135,7 @@ class TestTicTacToeModel(TestPlayer):
             ("X", ["X", "O", "", "", "", "", "", "", ""], 2, ["X", "O", "X", "", "", "", "", "", ""]),
         ),
     )
-    async def test_make_move(self, sign, table, coord, expected):
+    def test_make_move(self, sign, table, coord, expected):
         model = TicTacToeModel()
         model.table = self.table_to_observable(table)
         model.x_player = SinglePlayer(sign)
@@ -151,10 +144,9 @@ class TestTicTacToeModel(TestPlayer):
             model.current_player.value = model.x_player
         else:
             model.current_player.value = model.o_player
-        await model.make_move(coord)
+        model.make_move(coord)
         assert self.table_to_str(model.table) == expected
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "sign,table,coord,expected",
         (
@@ -164,7 +156,7 @@ class TestTicTacToeModel(TestPlayer):
             ("O", ["O", "X", "X", "O", "", "", "", "", ""], 6, "O"),
         ),
     )
-    async def test_make_move_winner(self, sign, table, coord, expected):
+    def test_make_move_winner(self, sign, table, coord, expected):
         model = TicTacToeModel()
         model.table = self.table_to_observable(table)
         model.x_player = SinglePlayer(sign)
@@ -173,10 +165,9 @@ class TestTicTacToeModel(TestPlayer):
             model.current_player.value = model.x_player
         else:
             model.current_player.value = model.o_player
-        await model.make_move(coord)
+        model.make_move(coord)
         assert model.winner.value == expected
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "sign,table,coord",
         (
@@ -185,10 +176,10 @@ class TestTicTacToeModel(TestPlayer):
             ("X", ["X", "O", "", "", "", "", "", "", ""], 6),
         ),
     )
-    async def test_make_move_exception(self, sign, table, coord):
+    def test_make_move_exception(self, sign, table, coord):
         model = TicTacToeModel()
         model.table = self.table_to_observable(table)
         model.x_player = SinglePlayer(sign)
         model.o_player = SinglePlayer(sign)
         with pytest.raises(ValueError):
-            await model.make_move(coord)
+            model.make_move(coord)

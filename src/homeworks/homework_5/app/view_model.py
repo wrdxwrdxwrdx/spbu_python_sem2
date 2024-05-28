@@ -1,14 +1,10 @@
 import abc
-import asyncio
-import time
 from functools import partial
 from tkinter import Tk, ttk
 from typing import Callable, Optional
 
 from model import BotPlayer, Player, SinglePlayer, TicTacToeModel
 from view import CongratulationsView, GameView, ModeChoiceView, SideChoiceView, StrategyChoiceView
-
-loop = asyncio.new_event_loop()
 
 
 class IViewModel(metaclass=abc.ABCMeta):
@@ -22,7 +18,6 @@ class IViewModel(metaclass=abc.ABCMeta):
 
 class ViewModel:
     def __init__(self, root: Tk) -> None:
-        self.loop = asyncio.new_event_loop()
         self._model: TicTacToeModel = TicTacToeModel()
         self._root = root
         self._viewmodels: dict[str, IViewModel] = {
@@ -56,9 +51,7 @@ class ModeChoiceViewModel(IViewModel):
 
         def bot_btn_cmd() -> None:
             self._model.current_player.add_callback(
-                lambda value: asyncio.get_event_loop().create_task(self._model.make_move(None))
-                if isinstance(value, BotPlayer)
-                else ...
+                lambda value: self._model.make_move(None) if isinstance(value, BotPlayer) else ...
             )
             view_model.switch(
                 "StrategyChoice", {"ViewModel": view_model, "me": SinglePlayer(), "opponent": BotPlayer()}
@@ -144,7 +137,7 @@ class GameViewModel(IViewModel):
 
         def player_move(coord: int) -> None:
             if self._model.current_player.value:
-                asyncio.run(self._model.make_move(coord))
+                self._model.make_move(coord)
 
         for coord in range(len(view.buttons)):
             self._model.table[coord].add_callback(create_callback_func(coord))
