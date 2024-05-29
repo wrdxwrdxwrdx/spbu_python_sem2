@@ -14,15 +14,21 @@ class TestSortingModule:
         assert merge_sorted == list(sorted(array))
 
     @given(st.integers(100, 1000), st.integers(1, 100))
-    def test_thread_sort(self, length, thread_number):
+    def test_thread_sort_parts(self, length, thread_number):
         array = [random.randint(-100, 100) for _ in range(length)]
-        thread_sorted = thread_sort(array, thread_number)
+        thread_sorted = thread_sort_parts(array, thread_number)
+        assert thread_sorted == list(sorted(array))
+
+    @given(st.integers(100, 1000), st.integers(1, 100))
+    def test_thread_sort_merge(self, length, thread_number):
+        array = [random.randint(-100, 100) for _ in range(length)]
+        thread_sorted = thread_sort_merge(array, thread_number)
         assert thread_sorted == list(sorted(array))
 
     @given(st.integers(100, 1000), st.integers(1, 8))
     def test_process_sort(self, length, thread_number):
         array = [random.randint(-100, 100) for _ in range(length)]
-        process_sorted = thread_sort(array, thread_number, multiprocess=True)
+        process_sorted = thread_sort_parts(array, thread_number, multiprocess=True)
         assert process_sorted == list(sorted(array))
 
     @given(st.integers(1, 100), st.integers(1, 100))

@@ -22,11 +22,23 @@ def check_time_ms(
 
 
 def create_graph(
-    size: int, threads: list[int], output_path: str, multiprocess: bool = False, n_tries: int = 10
+    size: int,
+    threads: list[int],
+    output_path: str,
+    multiprocess: bool = False,
+    second_function: bool = False,
+    n_tries: int = 5,
 ) -> None:
-    thread_y = [
-        check_time_ms(thread_sort, size, n_tries, thread_number, multiprocess=multiprocess) for thread_number in threads
-    ]
+    if second_function:
+        thread_y = [
+            check_time_ms(thread_sort_merge, size, n_tries, thread_number, multiprocess=multiprocess)
+            for thread_number in threads
+        ]
+    else:
+        thread_y = [
+            check_time_ms(thread_sort_parts, size, n_tries, thread_number, multiprocess=multiprocess)
+            for thread_number in threads
+        ]
 
     plt.title(f"size: {size}")
     plt.plot(threads, thread_y, label="multiprocess sort" if multiprocess else "thread sort")
@@ -55,6 +67,9 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--multiprocess", action="store_true", help="is it necessary to create threads in different processes"
     )
+
+    argparser.add_argument("--second_function", action="store_true", help="use second thread function")
+
     args = argparser.parse_args()
 
     try:
