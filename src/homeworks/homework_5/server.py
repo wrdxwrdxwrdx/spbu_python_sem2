@@ -10,11 +10,11 @@ class Room:
     def __init__(self, room_name: str, password: str) -> None:
         self.room_name = room_name
         self.password = password
-        self.x_player: Optional[list[socket.socket, Any]] = None
-        self.o_player: Optional[list[socket.socket, Any]] = None
-        self.current_player: Optional[list[socket.socket, Any]] = None
+        self.x_player: Optional[tuple[socket.socket, Any]] = None
+        self.o_player: Optional[tuple[socket.socket, Any]] = None
+        self.current_player: Optional[tuple[socket.socket, Any]] = None
 
-    def change_current_player(self):
+    def change_current_player(self) -> None:
         if self.current_player == self.x_player:
             self.current_player = self.o_player
         elif self.current_player == self.o_player:
@@ -25,14 +25,15 @@ class Room:
     def send_back(self, data: bytes) -> None:
         command = data.decode()
         coord, sign, port = command.split(",")
-        if port == str(self.current_player[1][1]):
-            self.x_player[0].send(f"{coord},{sign}".encode())
-            self.o_player[0].send(f"{coord},{sign}".encode())
-            self.change_current_player()
+        if self.current_player and port == str(self.current_player[1][1]):
+            if self.x_player and self.o_player:
+                self.x_player[0].send(f"{coord},{sign}".encode())
+                self.o_player[0].send(f"{coord},{sign}".encode())
+                self.change_current_player()
 
     def start(self, conn: socket.socket, addr: Any) -> None:
         if self.x_player and self.o_player:
-            self.current_player: list[socket.socket, Any] = self.x_player
+            self.current_player = self.x_player
             while True:
                 data = self.current_player[0].recv(1024)
                 if data:
@@ -57,9 +58,9 @@ class Sever:
             self.rooms[room_name] = Room(room_name, password)
             room = self.rooms[room_name]
             if sign == "X":
-                room.x_player = [conn, addr]
+                room.x_player = (conn, addr)
             else:
-                room.o_player = [conn, addr]
+                room.o_player = (conn, addr)
             logger.info(f"room {room_name} with password {password} was created by {addr}")
             conn.send("access granted".encode())
             return room_name
@@ -72,12 +73,12 @@ class Sever:
             if password == self.rooms[room_name].password:
                 room = self.rooms[room_name]
                 if room.x_player is None:
-                    room.x_player = [conn, addr]
+                    room.x_player = (conn, addr)
                     logger.info(f"{addr} connected to room {room_name}")
                     conn.send("access granted".encode())
                     return room_name
                 elif room.o_player is None:
-                    room.o_player = [conn, addr]
+                    room.o_player = (conn, addr)
                     logger.info(f"{addr} connected to room {room_name}")
                     conn.send("access granted".encode())
                     return room_name
@@ -103,7 +104,7 @@ class Sever:
                 return self.connect(conn, addr, room_name, password)
             else:
                 conn.send("access denied".encode())
-                ValueError("Unexpected room command")
+                raise ValueError("Unexpected room command")
 
     def client_handler(self, conn: socket.socket, addr: Any) -> None:
         room_name = self.room_handler(conn, addr)
@@ -111,9 +112,9 @@ class Sever:
         while (room.o_player is None) or (room.x_player is None):
             time.sleep(0)
         logger.info(f"Room {room_name} completed, game started for {addr}")
-        if room.o_player == [conn, addr]:
+        if room.o_player == (conn, addr):
             conn.sendall("O".encode())
-        if room.x_player == [conn, addr]:
+        if room.x_player == (conn, addr):
             conn.sendall("X".encode())
         logger.info(f"Message about side sent to {addr}")
         room.start(conn, addr)
