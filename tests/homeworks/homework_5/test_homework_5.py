@@ -1,3 +1,5 @@
+import time
+from threading import Thread
 from unittest import mock
 
 import pytest
@@ -184,3 +186,112 @@ class TestTicTacToeModel(TestPlayer):
         model.o_player = SinglePlayer(sign)
         with pytest.raises(ValueError):
             model.make_move(coord)
+
+
+class TestMultiPlayer:
+    ip = "127.0.0.1"
+    port = 8888
+
+    def client_handler(self, conn, addr, get_messages, send_messages):
+        for i in range(len(get_messages)):
+            assert conn.recv(1024).decode() == get_messages[i]
+            conn.sendall(send_messages[i].encode())
+
+    def server_test(self, ip, port, get_messages, send_messages):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        sock.bind((ip, port))
+        sock.listen()
+        conn, addr = sock.accept()
+        thread = Thread(target=self.client_handler, args=(conn, addr, get_messages, send_messages))
+        thread.start()
+
+    @pytest.mark.parametrize(
+        "get_messages,send_messages",
+        (
+            (["command,name,password,sign"], ["access granted"]),
+            (["hello,hello,hello,hello"], ["access granted"]),
+            (["connect,room,password,X"], ["access granted"]),
+        ),
+    )
+    def test_connect(self, get_messages, send_messages):
+        Thread(target=lambda: self.server_test(self.ip, self.port, get_messages, send_messages)).start()
+        time.sleep(0.5)
+        command, name, password, sign = get_messages[0].split(",")
+        player = MultiPlayer([Observable() for _ in range(9)])
+        player.connect(self.ip, self.port, command, name, password, sign)
+
+    @pytest.mark.parametrize(
+        "get_messages,send_messages",
+        ((["connect,name,1,sign"], ["access denied"]), (["command,name,pa1s123sword,sign"], ["access denied"])),
+    )
+    def test_connect_exception(self, get_messages, send_messages):
+        with pytest.raises(ValueError):
+            Thread(target=lambda: self.server_test(self.ip, self.port, get_messages, send_messages)).start()
+            time.sleep(0.5)
+            command, name, password, sign = get_messages[0].split(",")
+            player = MultiPlayer([Observable() for _ in range(9)])
+            player.connect(self.ip, self.port, command, name, password, sign)
+
+    @pytest.mark.parametrize(
+        "coord,sign,expected",
+        (
+            (
+                0,
+                "X",
+                [
+                    "X",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ],
+            ),
+            (
+                8,
+                "X",
+                [
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "X",
+                ],
+            ),
+            (
+                3,
+                "O",
+                [
+                    "",
+                    "",
+                    "",
+                    "O",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ],
+            ),
+        ),
+    )
+    def test_make_move(self, coord, sign, expected):
+        with mock.patch("socket.socket.getsockname", return_value=("127.0.0.1", 1234)):
+            message = f"{coord},{sign},1234"
+            Thread(target=lambda: self.server_test(self.ip, self.port, [message], [message])).start()
+            time.sleep(0.5)
+
+            player = MultiPlayer([Observable() for _ in range(9)])
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            player.sock = sock
+            player.set_sign(sign)
+            sock.connect((self.ip, self.port))
+            player.make_move(player.table, coord)
