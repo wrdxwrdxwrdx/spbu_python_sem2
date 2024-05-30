@@ -1,7 +1,7 @@
-import time
 import socket
+import time
 from threading import Thread
-from typing import Optional, Any
+from typing import Any, Optional
 
 from loguru import logger
 
