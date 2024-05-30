@@ -7,7 +7,6 @@ from loguru import logger
 
 
 class Room:
-
     def __init__(self, room_name: str, password: str) -> None:
         self.room_name = room_name
         self.password = password
@@ -135,6 +134,6 @@ class Sever:
             thread.start()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     server = Sever("127.0.0.1", 8888)
     server.main()
