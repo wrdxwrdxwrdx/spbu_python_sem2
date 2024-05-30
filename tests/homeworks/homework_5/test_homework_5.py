@@ -115,11 +115,11 @@ class TestTicTacToeModel(TestPlayer):
     @pytest.mark.parametrize(
         "table,expected",
         (
-            (["X", "O", "", "X", "O", "", "X", "", ""], True),
-            (["X", "O", "", "X", "O", "", "", "", ""], False),
-            (["X", "O", "", "O", "X", "", "", "", "X"], True),
-            (["X", "O", "", "", "", "", "", "", ""], False),
-            (["X", "X", "X", "O", "O", "", "", "", ""], True),
+            (["X", "O", "", "X", "O", "", "X", "", ""], "X"),
+            (["X", "O", "", "X", "O", "", "", "", ""], None),
+            (["X", "O", "", "O", "X", "", "", "", "X"], "X"),
+            (["X", "O", "", "", "", "", "", "", ""], None),
+            (["X", "X", "X", "O", "O", "", "", "", ""], "X"),
         ),
     )
     def test_check_win(self, table, expected):
@@ -166,6 +166,7 @@ class TestTicTacToeModel(TestPlayer):
         else:
             model.current_player.value = model.o_player
         model.make_move(coord)
+        model.check_win_btn()
         assert model.winner.value == expected
 
     @pytest.mark.parametrize(

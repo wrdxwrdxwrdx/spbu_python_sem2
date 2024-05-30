@@ -1,10 +1,18 @@
 import abc
 from functools import partial
+from threading import Thread
 from tkinter import Tk, ttk
 from typing import Callable, Optional
 
-from model import BotPlayer, Player, SinglePlayer, TicTacToeModel
-from view import CongratulationsView, GameView, ModeChoiceView, SideChoiceView, StrategyChoiceView
+from src.homeworks.homework_5.app.model import BotPlayer, MultiPlayer, Player, SinglePlayer, TicTacToeModel
+from src.homeworks.homework_5.app.view import (
+    CongratulationsView,
+    GameView,
+    ModeChoiceView,
+    RoomChoiceView,
+    SideChoiceView,
+    StrategyChoiceView,
+)
 
 
 class IViewModel(metaclass=abc.ABCMeta):
@@ -22,6 +30,7 @@ class ViewModel:
         self._root = root
         self._viewmodels: dict[str, IViewModel] = {
             "ModeChoice": ModeChoiceViewModel(self._model),
+            "RoomChoice": RoomChoiceViewModel(self._model),
             "StrategyChoice": StrategyChoiceViewModel(self._model),
             "SideChoice": SideChoiceViewModel(self._model),
             "Game": GameViewModel(self._model),
@@ -51,19 +60,90 @@ class ModeChoiceViewModel(IViewModel):
 
         def bot_btn_cmd() -> None:
             self._model.current_player.add_callback(
-                lambda value: self._model.make_move(None) if isinstance(value, BotPlayer) else ...
+                lambda value: self._model.make_move(None)
+                if isinstance(value, BotPlayer) and self._model.game_is_running
+                else ...
             )
             view_model.switch(
                 "StrategyChoice", {"ViewModel": view_model, "me": SinglePlayer(), "opponent": BotPlayer()}
             )
 
+        def multi_btn_cmd() -> None:
+            view_model.switch("RoomChoice", {"ViewModel": view_model})
+
         view.single_btn.config(command=single_btn_cmd)
         view.bot_btn.config(command=bot_btn_cmd)
+        view.multi_btn.config(command=multi_btn_cmd)
 
     def start(self, root: Tk, data: dict) -> ttk.Frame:
         if "ViewModel" not in data:
             raise RuntimeError("ViewModel must be in data")
         frame = ModeChoiceView()
+        self._bind(frame, data["ViewModel"])
+        return frame
+
+
+class RoomChoiceViewModel(IViewModel):
+    def _bind(self, view: RoomChoiceView, view_model: ViewModel) -> None:
+        self.sign = "X"
+
+        def x_btn_cmd() -> None:
+            self.sign = "X"
+
+        def o_btn_cmd() -> None:
+            self.sign = "O"
+
+        def get_user_input() -> tuple[str, int, str, str]:
+            ip, port = view.ip_entry.get().split(":")
+            ip = str(ip)
+            port = int(port)
+            name = str(view.room_name_entry.get())
+            password = str(view.room_password_entry.get())
+            return ip, port, name, password
+
+        def create_btn_cmd() -> None:
+            def create() -> None:
+                try:
+                    player.connect(ip, port, "create", name, password, self.sign)
+                    view_model.switch("Game", {"ViewModel": view_model})
+                    self._model.current_player.value = self._model.o_player
+                    player.start_game()
+                except ValueError as error:
+                    print(error)
+
+            ip, port, name, password = get_user_input()
+            player = MultiPlayer(self._model.table)
+            self._model.x_player = player
+            self._model.o_player = player
+
+            Thread(target=create).start()
+
+        def connect_btn_cmd() -> None:
+            def connect() -> None:
+                try:
+                    player.connect(ip, port, "connect", name, password, self.sign)
+                    view_model.switch("Game", {"ViewModel": view_model})
+                    self._model.current_player.value = self._model.o_player
+                    player.start_game()
+                except ValueError as error:
+                    print(error)
+
+            ip, port, name, password = get_user_input()
+            player = MultiPlayer(self._model.table)
+            self._model.x_player = player
+            self._model.o_player = player
+
+            Thread(target=connect).start()
+
+        view.x_btn.config(command=x_btn_cmd)
+        view.o_btn.config(command=o_btn_cmd)
+        view.create_btn.config(command=create_btn_cmd)
+        view.connect_btn.config(command=connect_btn_cmd)
+
+    def start(self, root: Tk, data: dict) -> ttk.Frame:
+        if "ViewModel" not in data:
+            raise RuntimeError("ViewModel must be in data")
+        frame = RoomChoiceView()
         self._bind(frame, data["ViewModel"])
         return frame
 
@@ -132,7 +212,7 @@ class SideChoiceViewModel(IViewModel):
 
 class GameViewModel(IViewModel):
     def _bind(self, view: GameView, view_model: ViewModel) -> None:
-        def create_callback_func(coord: int) -> Callable:
+        def change_button_text(coord: int) -> Callable:
             return lambda value: view.buttons[coord].config(text=value)
 
         def player_move(coord: int) -> None:
@@ -140,7 +220,8 @@ class GameViewModel(IViewModel):
                 self._model.make_move(coord)
 
         for coord in range(len(view.buttons)):
-            self._model.table[coord].add_callback(create_callback_func(coord))
+            self._model.table[coord].add_callback(change_button_text(coord))
+            self._model.table[coord].add_callback(lambda _: self._model.check_win_btn())
             btn = view.buttons[coord]
             btn.config(command=partial(player_move, coord))
 
