@@ -2,7 +2,7 @@ import abc
 import random
 import socket
 from copy import copy
-from typing import Optional
+from typing import Any, Optional
 
 from src.homeworks.homework_5.app.observer import Observable
 
@@ -14,24 +14,16 @@ class Player(metaclass=abc.ABCMeta):
     def set_sign(self, sign: str) -> None:
         self.sign = sign
 
-    @staticmethod
-    def _check_win_table(table: list[Optional[str]]) -> bool:
-        for row in range(3):
-            if table[row * 3] == table[row * 3 + 1] == table[row * 3 + 2] is not None:
-                return True
-
-        for column in range(3):
-            if table[column] == table[column + 3] == table[column + 6] is not None:
-                return True
-
-        if table[0] == table[4] == table[8] is not None:
-            return True
-        if table[2] == table[4] == table[6] is not None:
-            return True
-        return False
+    @abc.abstractmethod
+    def start_game(self, *args: Any, **kwargs: Any) -> bool:
+        ...
 
     @abc.abstractmethod
-    def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
+    def make_move(self, table: list[Observable], coord: Optional[int]) -> bool:
+        ...
+
+    @abc.abstractmethod
+    def end_game(self, *args: Any, **kwargs: Any) -> bool:
         ...
 
 
@@ -91,9 +83,18 @@ class TicTacToeModel:
 
 
 class SinglePlayer(Player):
-    def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
+    def start_game(self) -> bool:
+        return True
+
+    def end_game(self) -> bool:
+        return True
+
+    def make_move(self, table: list[Observable], coord: Optional[int]) -> bool:
         if coord is not None:
-            table[coord].value = self.sign
+            if table[coord].value is None:
+                table[coord].value = self.sign
+                return True
+            return False
         else:
             raise ValueError("SinglePlayer's make_move coord must be int, not None")
 
@@ -102,6 +103,28 @@ class BotPlayer(Player):
     def __init__(self, is_strategy: bool = False) -> None:
         super().__init__()
         self.is_strategy = is_strategy
+
+    def start_game(self) -> bool:
+        return True
+
+    def end_game(self) -> bool:
+        return True
+
+    @staticmethod
+    def _check_win_table(table: list[Optional[str]]) -> bool:
+        for row in range(3):
+            if table[row * 3] == table[row * 3 + 1] == table[row * 3 + 2] is not None:
+                return True
+
+        for column in range(3):
+            if table[column] == table[column + 3] == table[column + 6] is not None:
+                return True
+
+        if table[0] == table[4] == table[8] is not None:
+            return True
+        if table[2] == table[4] == table[6] is not None:
+            return True
+        return False
 
     def _generate_bot_move(self, table: list[Observable]) -> int:
         def _generate_random_move() -> int:
@@ -126,8 +149,9 @@ class BotPlayer(Player):
                         return coord
         return _generate_random_move()
 
-    def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
+    def make_move(self, table: list[Observable], coord: Optional[int]) -> bool:
         table[self._generate_bot_move(table)].value = self.sign
+        return True
 
 
 class MultiPlayer(Player):
@@ -142,6 +166,10 @@ class MultiPlayer(Player):
 
             obs.add_callback(change_my_move)
 
+    def end_game(self) -> bool:
+        self.sock.close()
+        return True
+
     def change_table(self, sock: socket.socket) -> None:
         while True:
             try:
@@ -152,9 +180,6 @@ class MultiPlayer(Player):
                 coord, sign = server_message
                 coord = int(coord)
                 self.table[coord].value = sign
-                table_str = [obs.value for obs in self.table]
-                if self._check_win_table(table_str) or all(table_str):
-                    sock.close()
             else:
                 raise ValueError("Incorrect info from server, expected (coord,sign)")
 
@@ -168,12 +193,15 @@ class MultiPlayer(Player):
         if command_status != "access granted":
             raise ValueError(command_status)
 
-    def start_game(self) -> None:
+    def start_game(self) -> bool:
         my_sign = (self.sock.recv(1024)).decode()
         self.sign = my_sign
         self.is_my_move = my_sign == "X"
         self.change_table(self.sock)
+        return True
 
-    def make_move(self, table: list[Observable], coord: Optional[int]) -> None:
+    def make_move(self, table: list[Observable], coord: Optional[int]) -> bool:
         if self.is_my_move:
             self.sock.send(f"{coord},{self.sign},{self.sock.getsockname()[1]}".encode())
+            return True
+        return False

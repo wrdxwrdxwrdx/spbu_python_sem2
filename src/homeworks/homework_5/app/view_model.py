@@ -258,4 +258,8 @@ class CongratulationsViewModel(IViewModel):
             raise KeyError("No ViewModel in data")
         frame = CongratulationsView()
         self._bind(frame, data["ViewModel"], data["winner"])
+        if self._model.o_player:
+            self._model.o_player.end_game()
+        if self._model.x_player:
+            self._model.x_player.end_game()
         return frame
