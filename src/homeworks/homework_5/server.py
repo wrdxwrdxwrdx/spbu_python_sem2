@@ -65,7 +65,7 @@ class Sever:
             conn.send("access granted".encode())
             return room_name
         else:
-            conn.send("access denied".encode())
+            conn.send("Room already created".encode())
             raise ValueError("Room already created")
 
     def connect(self, conn: socket.socket, addr: Any, room_name: str, password: str) -> str:
@@ -83,19 +83,19 @@ class Sever:
                     conn.send("access granted".encode())
                     return room_name
                 else:
-                    conn.send("access denied".encode())
+                    conn.send("Room is full".encode())
                     raise ValueError("Room is full")
             else:
-                conn.send("access denied".encode())
+                conn.send("Incorrect password".encode())
                 raise ValueError("Incorrect password")
         else:
-            conn.send("access denied".encode())
-            raise ValueError(f"No room with name {room_name}")
+            conn.send(f"No room with this name".encode())
+            raise ValueError(f"No room with this name")
 
     def room_handler(self, conn: socket.socket, addr: Any) -> str:
         full_command = conn.recv(1024).decode().split(",")
         if len(full_command) != 4:
-            raise ValueError("Incorrect input from reader about room, expected type: command,name,password,sign")
+            raise ValueError("Incorrect input from socket about room, expected type: command,name,password,sign")
         else:
             command, room_name, password, sign = full_command
             if command == "create":
@@ -103,7 +103,7 @@ class Sever:
             elif command == "connect":
                 return self.connect(conn, addr, room_name, password)
             else:
-                conn.send("access denied".encode())
+                conn.send("Unexpected room command".encode())
                 raise ValueError("Unexpected room command")
 
     def client_handler(self, conn: socket.socket, addr: Any) -> None:

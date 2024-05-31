@@ -107,6 +107,7 @@ class RoomChoiceView(ttk.Frame):
         super().__init__()
         label_font = tkFont.Font(family="Helvetica", size=20)
         entry_font = tkFont.Font(family="Helvetica", size=30)
+        error_font = tkFont.Font(family="Helvetica", size=15)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -139,3 +140,12 @@ class RoomChoiceView(ttk.Frame):
 
         self.connect_btn = ttk.Button(self, text="Connect")
         self.connect_btn.grid(row=9, column=1, padx=15, sticky="NSEW")
+
+        self.error_label = ttk.Label(
+            self,
+            text="",
+            justify="center",
+            font=error_font,
+            foreground="red",
+        )
+        self.error_label.grid(row=10, column=0, columnspan=2, padx=15, pady=15)

@@ -166,7 +166,7 @@ class MultiPlayer(Player):
 
         command_status = sock.recv(1024).decode()
         if command_status != "access granted":
-            raise ValueError(f"{command} error")
+            raise ValueError(command_status)
 
     def start_game(self) -> None:
         my_sign = (self.sock.recv(1024)).decode()

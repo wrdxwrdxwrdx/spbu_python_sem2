@@ -109,7 +109,7 @@ class RoomChoiceViewModel(IViewModel):
                     self._model.current_player.value = self._model.o_player
                     player.start_game()
                 except ValueError as error:
-                    print(error)
+                    view.error_label.config(text=str(error))
 
             ip, port, name, password = get_user_input()
             player = MultiPlayer(self._model.table)
@@ -126,7 +126,7 @@ class RoomChoiceViewModel(IViewModel):
                     self._model.current_player.value = self._model.o_player
                     player.start_game()
                 except ValueError as error:
-                    print(error)
+                    view.error_label.config(text=str(error))
 
             ip, port, name, password = get_user_input()
             player = MultiPlayer(self._model.table)
