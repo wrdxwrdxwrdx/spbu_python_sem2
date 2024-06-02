@@ -3,6 +3,7 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 import requests
+
 from src.homeworks.homework_3.ORM import *
 
 
