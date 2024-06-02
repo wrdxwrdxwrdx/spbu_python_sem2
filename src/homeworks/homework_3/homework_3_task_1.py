@@ -1,10 +1,9 @@
 import argparse
 from datetime import datetime
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import requests
-from ORM import *
+from src.homeworks.homework_3.ORM import *
 
 
 @dataclass
