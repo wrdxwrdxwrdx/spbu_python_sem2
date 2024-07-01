@@ -4,6 +4,7 @@ import time
 from typing import Callable
 
 import matplotlib.pyplot as plt
+
 from src.homeworks.homework_4.sorting_module import *
 
 
