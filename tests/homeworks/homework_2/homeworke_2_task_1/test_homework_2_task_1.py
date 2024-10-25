@@ -4,7 +4,7 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given
 
-from src.homeworks.homework_2.homework_2_task_1 import *
+from src.homeworks.Action_storage.storage import *
 
 
 class TestAction:

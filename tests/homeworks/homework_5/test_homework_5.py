@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from src.homeworks.homework_5.app.model import *
+from src.homeworks.TicTacToe.app.model import *
 
 
 class TestPlayer:

@@ -3,7 +3,7 @@ import random
 import hypothesis.strategies as st
 from hypothesis import given
 
-from src.homeworks.homework_4.sorting_module import *
+from src.homeworks.Thread_sort.sorting_module import *
 
 
 class TestSortingModule:

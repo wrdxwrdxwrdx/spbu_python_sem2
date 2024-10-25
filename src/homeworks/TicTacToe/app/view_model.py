@@ -4,8 +4,8 @@ from threading import Thread
 from tkinter import Tk, ttk
 from typing import Callable, Optional
 
-from src.homeworks.homework_5.app.model import BotPlayer, MultiPlayer, Player, SinglePlayer, TicTacToeModel
-from src.homeworks.homework_5.app.view import (
+from src.homeworks.TicTacToe.app.model import BotPlayer, MultiPlayer, Player, SinglePlayer, TicTacToeModel
+from src.homeworks.TicTacToe.app.view import (
     CongratulationsView,
     GameView,
     ModeChoiceView,

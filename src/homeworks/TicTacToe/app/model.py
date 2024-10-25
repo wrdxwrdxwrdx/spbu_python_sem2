@@ -4,7 +4,7 @@ import socket
 from copy import copy
 from typing import Any, Optional
 
-from src.homeworks.homework_5.app.observer import Observable
+from src.homeworks.TicTacToe.app.observer import Observable
 
 
 class Player(metaclass=abc.ABCMeta):
