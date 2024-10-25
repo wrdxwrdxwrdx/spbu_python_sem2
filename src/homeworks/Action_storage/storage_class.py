@@ -3,8 +3,8 @@ import random
 from copy import copy
 from typing import Collection, Generic, Optional, TypeVar
 
-from src.homeworks.Registry.Registry import Registry
 from src.homeworks.Action_storage.storage_exceptions import *
+from src.homeworks.Registry.Registry import Registry
 
 
 class Action:
