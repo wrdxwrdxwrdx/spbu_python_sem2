@@ -1,6 +1,6 @@
 from tkinter import Tk
 
-from src.homeworks.homework_5.app.view_model import ViewModel
+from src.homeworks.TicTacToe.app.view_model import ViewModel
 
 
 class App:

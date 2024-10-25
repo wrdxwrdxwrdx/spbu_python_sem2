@@ -1,6 +1,6 @@
 import pytest
 
-from src.exam.exam_2.model import *
+from src.exam.bashorg_parser.model import *
 
 
 class TestModel:

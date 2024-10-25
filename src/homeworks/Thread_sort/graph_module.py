@@ -5,7 +5,7 @@ from typing import Callable
 
 import matplotlib.pyplot as plt
 
-from src.homeworks.homework_4.sorting_module import *
+from src.homeworks.Thread_sort.sorting_module import *
 
 
 def check_time_ms(

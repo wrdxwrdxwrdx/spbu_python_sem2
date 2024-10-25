@@ -1,6 +1,6 @@
 import pytest
 
-from src.homeworks.homework_1.homework_1_task_2 import *
+from src.homeworks.Registry.Treap import *
 
 
 class TestTreap:

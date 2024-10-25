@@ -1,6 +1,6 @@
 from inspect import getfullargspec
 
-from src.homeworks.homework_2.storage import *
+from src.homeworks.Action_storage.storage_class import *
 
 COMMAND_EXPLANATION = (
     "\nEnter command (AddToStart, AddToEnd, ChangeIndex, AddValue, ...) and args with space.\n"

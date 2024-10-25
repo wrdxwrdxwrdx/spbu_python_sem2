@@ -1,6 +1,6 @@
 import pytest
 
-from src.homeworks.homework_1.homework_1_task_1 import *
+from src.homeworks.Registry.Registry import *
 
 
 class TestRegistry:
