@@ -2,7 +2,7 @@ import asyncio
 import tkinter as tk
 from tkinter import Tk
 
-from src.exam.exam_2.model import *
+from src.exam.bashorg_parser.model import *
 
 
 class App:
